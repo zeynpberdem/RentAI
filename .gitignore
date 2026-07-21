@@ -1,0 +1,33 @@
+# ============================================================
+# Root .gitignore — covers BOTH backend (Python) and frontend (Node)
+# ============================================================
+# Rule of thumb: real secrets never get committed.
+# Only *.env.example files (templates, no real values) are tracked.
+
+# ---- Environment files (never commit real secrets) ----
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# ---- Python / Django (backend) ----
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
+
+# ---- Node / Vue (frontend) ----
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ---- Editor / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
