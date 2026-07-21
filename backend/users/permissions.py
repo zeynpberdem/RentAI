@@ -12,34 +12,32 @@ no valid token was sent).
 from rest_framework.permissions import BasePermission
 
 
-class IsCustomer(BasePermission):
+class HasRole(BasePermission):
+    """Base class — subclasses just set `required_role`, no repeated logic."""
+
+    required_role = None
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.role == self.required_role
+        )
+
+
+class IsCustomer(HasRole):
     """Allows access only to authenticated users with role == customer."""
 
-    def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.role == "customer"
-        )
+    required_role = "customer"
 
 
-class IsOperator(BasePermission):
+class IsOperator(HasRole):
     """Allows access only to authenticated users with role == operator."""
 
-    def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.role == "operator"
-        )
+    required_role = "operator"
 
 
-class IsAdmin(BasePermission):
+class IsAdmin(HasRole):
     """Allows access only to authenticated users with role == admin."""
 
-    def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.role == "admin"
-        )
+    required_role = "admin"

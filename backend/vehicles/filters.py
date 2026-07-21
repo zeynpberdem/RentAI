@@ -6,13 +6,12 @@ from .models import Vehicle
 
 
 class VehicleFilter(django_filters.FilterSet):
-    # daily_price tek bir değer değil, bir ARALIK (min/max) olarak
-    # filtrelenmek istendiği için (örn. "1000 TL altı"), iki ayrı alan
-    # tanımlıyoruz: price_min ve price_max. Bunlar Vehicle modelinde
-    # doğrudan var olan alanlar değil, django-filter'ın "daily_price'a
-    # gte (>=) / lte (<=) uygula" demesini sağlayan özel tanımlar.
-    price_min = django_filters.NumberFilter(field_name="daily_price", lookup_expr="gte")
-    price_max = django_filters.NumberFilter(field_name="daily_price", lookup_expr="lte")
+    # daily_price bir ARALIK (min/max) olarak filtrelenmek istendiği için
+    # (örn. "1000 TL altı"), django-filter'ın hazır RangeFilter'ını
+    # kullanıyoruz — bu tek satır, ?daily_price_min= ve ?daily_price_max=
+    # sorgu parametrelerini otomatik olarak destekler (gte/lte mantığını
+    # kendi içinde barındırır, elle iki ayrı filtre yazmamıza gerek kalmaz).
+    daily_price = django_filters.RangeFilter()
 
     class Meta:
         model = Vehicle
