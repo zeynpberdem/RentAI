@@ -14,15 +14,14 @@ the Handover / operator-panel work starts in Week 3.
 
 from django.db import models
 
+from core.models import BaseModel
 
-class Location(models.Model):
+
+class Location(BaseModel):
     """A branch / office where vehicles are based and returned."""
 
     name = models.CharField(max_length=100)   # Şube adı, örn. "Kadıköy Şubesi"
     city = models.CharField(max_length=100)   # Şehir, filtreleme/arama için ayrı tutuluyor
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "locations"
@@ -32,7 +31,7 @@ class Location(models.Model):
         return f"{self.name} ({self.city})"
 
 
-class Vehicle(models.Model):
+class Vehicle(BaseModel):
     """A single rentable car in the fleet."""
 
     class Segment(models.TextChoices):
@@ -87,9 +86,6 @@ class Vehicle(models.Model):
         on_delete=models.PROTECT,
         related_name="vehicles",
     )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "vehicles"

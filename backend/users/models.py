@@ -19,15 +19,21 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 
+from core.models import BaseModel
+
 from .managers import UserManager
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     """
     AbstractUser yerine AbstractBaseUser + PermissionsMixin kullanıyoruz;
     AbstractUser hazır bir "username" alanı getirir ve onu devre dışı
     bırakmak yerine sıfırdan, sadece ihtiyacımız olan alanlarla kurmak
     daha temiz ve daha az kafa karıştırıcı.
+
+    BaseModel'den id (UUID), is_active, created/updated/deleted_user ve
+    created_at/updated_at/deleted_at alanlarını miras alıyor — burada
+    tekrar tanımlamıyoruz.
     """
 
     class Role(models.TextChoices):
@@ -43,15 +49,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     phone = models.CharField(max_length=20, blank=True)  # İletişim, zorunlu değil
 
-    # is_active — hesap pasif edildiğinde giriş yapamaz (silme yerine
-    # devre dışı bırakma; verinin geçmişte kalan ilişkileri bozulmaz).
-    is_active = models.BooleanField(default=True)
     # is_staff — Django admin paneline giriş izni. Rol ile karıştırma:
     # bir "operator" iş rolü olabilir ama admin paneline girmeyebilir.
     is_staff = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 

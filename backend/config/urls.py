@@ -21,7 +21,8 @@ urlpatterns = [
     # --- Vehicles (PDF VEH-2: GET /api/vehicles, filtre + sayfalama) ---
     path('api/vehicles', VehicleListView.as_view(), name='vehicle-list'),
     # --- Vehicle detail (PDF VEH-3) ---
-    path('api/vehicles/<int:pk>', VehicleDetailView.as_view(), name='vehicle-detail'),
+    # uuid:pk -> ID'ler artık integer değil UUID (BaseModel'den geliyor).
+    path('api/vehicles/<uuid:pk>', VehicleDetailView.as_view(), name='vehicle-detail'),
 
     # --- API docs (drf-spectacular) — endpoint'leri tarayıcıdan görüp
     # deneyebilmek için; Postman'e gerek kalmadan register/login test edilebilir.
