@@ -1,0 +1,58 @@
+"""
+Ortak test fixture'ları — testler arasında tekrar eden hazırlık kodu
+(kullanıcı oluşturma, giriş yapmış istemci, örnek araç) burada toplanır.
+"""
+
+import pytest
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from users.models import User
+from vehicles.models import Location, Vehicle
+
+
+@pytest.fixture
+def api_client():
+    return APIClient()
+
+
+@pytest.fixture
+def make_user(db):
+    """Belirli bir role sahip kullanıcı oluşturan bir fabrika (factory) döner."""
+
+    def _make_user(email="user@example.com", password="TestSifre123!", role=User.Role.CUSTOMER):
+        return User.objects.create_user(email=email, password=password, role=role)
+
+    return _make_user
+
+
+@pytest.fixture
+def authenticated_client(api_client):
+    """Verilen kullanıcı için JWT üretip istemciye ekleyen bir fabrika döner."""
+
+    def _authenticated_client(user):
+        access_token = RefreshToken.for_user(user).access_token
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        return api_client
+
+    return _authenticated_client
+
+
+@pytest.fixture
+def location(db):
+    return Location.objects.create(name="Test Şube", city="Istanbul")
+
+
+@pytest.fixture
+def vehicle(db, location):
+    return Vehicle.objects.create(
+        brand="Toyota",
+        model="Corolla",
+        segment=Vehicle.Segment.MID,
+        transmission=Vehicle.Transmission.AUTOMATIC,
+        fuel=Vehicle.Fuel.PETROL,
+        seats=5,
+        plate="34TEST01",
+        daily_price=1000,
+        location=location,
+    )
