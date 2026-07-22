@@ -5,6 +5,7 @@ from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from reservations.views import ReservationCancelView, ReservationListCreateView
 from users.views import RegisterView
 from vehicles.views import VehicleDetailView, VehicleListView
 
@@ -23,6 +24,10 @@ urlpatterns = [
     # --- Vehicle detail (PDF VEH-3) ---
     # uuid:pk -> ID'ler artık integer değil UUID (BaseModel'den geliyor).
     path('api/vehicles/<uuid:pk>', VehicleDetailView.as_view(), name='vehicle-detail'),
+
+    # --- Reservations (PDF RES-1/2/3) ---
+    path('api/reservations', ReservationListCreateView.as_view(), name='reservation-list-create'),
+    path('api/reservations/<uuid:pk>/cancel', ReservationCancelView.as_view(), name='reservation-cancel'),
 
     # --- API docs (drf-spectacular) — endpoint'leri tarayıcıdan görüp
     # deneyebilmek için; Postman'e gerek kalmadan register/login test edilebilir.

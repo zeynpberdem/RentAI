@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "core",
     "users",
     "vehicles",
+    "reservations",
 ]
 
 MIDDLEWARE = [
