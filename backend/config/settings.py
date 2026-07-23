@@ -65,6 +65,9 @@ INSTALLED_APPS = [
     # --- Third-party ---
     "rest_framework",
     "rest_framework_simplejwt",
+    # BLACKLIST_AFTER_ROTATION ayarının (SIMPLE_JWT) gerçekten çalışması
+    # için bu app şart — o ayar var ama bu app olmadan hiçbir işe yaramıyordu.
+    "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "drf_spectacular",
     "corsheaders",
