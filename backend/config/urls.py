@@ -11,7 +11,7 @@ from handovers.views import HandoverCreateView
 from reservations.views import ReservationCancelView, ReservationListCreateView
 from service_requests.views import ServiceRequestListCreateView, ServiceRequestUpdateView
 from users.views import RegisterView
-from vehicles.views import VehicleDetailView, VehicleListView
+from vehicles.views import LocationListView, VehicleDetailView, VehicleListView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -22,6 +22,9 @@ urlpatterns = [
     path('api/auth/login', TokenObtainPairView.as_view(), name='auth-login'),
     # TokenRefreshView: eski refresh token'dan yeni access token üretir.
     path('api/auth/refresh', TokenRefreshView.as_view(), name='auth-refresh'),
+
+    # --- Locations (arama ekranındaki şube seçimi için) ---
+    path('api/locations', LocationListView.as_view(), name='location-list'),
 
     # --- Vehicles (PDF VEH-2: GET /api/vehicles, filtre + sayfalama) ---
     path('api/vehicles', VehicleListView.as_view(), name='vehicle-list'),

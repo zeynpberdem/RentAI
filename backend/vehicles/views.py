@@ -5,8 +5,17 @@ from rest_framework import generics, permissions
 from users.permissions import IsAdmin
 
 from .filters import VehicleFilter
-from .models import Vehicle
-from .serializers import VehicleSerializer, VehicleWriteSerializer
+from .models import Location, Vehicle
+from .serializers import LocationSerializer, VehicleSerializer, VehicleWriteSerializer
+
+
+class LocationListView(generics.ListAPIView):
+    """GET /api/locations — şube listesi, arama ekranındaki şube seçimi için."""
+
+    queryset = Location.active_objects.order_by("city", "name")
+    serializer_class = LocationSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = None  # şube sayısı az, sayfalamaya gerek yok
 
 
 class VehicleListView(generics.ListCreateAPIView):

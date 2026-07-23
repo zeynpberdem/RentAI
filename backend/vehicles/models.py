@@ -92,9 +92,27 @@ class Vehicle(BaseModel):
     # "vehicles/" klasörüne kaydedilir (bkz. config/settings.py).
     image = models.ImageField(upload_to="vehicles/", blank=True, null=True)
 
+    has_ac = models.BooleanField(default=False)     # Klima
+    is_4wd = models.BooleanField(default=False)     # Dörtçeker
+
     class Meta:
         db_table = "vehicles"
         ordering = ["-created_at"]
+        # Gerçek bir veritabanı kısıtı (unique=True'daki gibi) — elektrikli
+        # araçların manuel vitesi olmaz (tek hızlı dişli sistemleri var).
+        # Bu satır sayesinde API'yi, admin panelini, hatta ham SQL'i bile
+        # atlayarak biri bu kombinasyonu eklemeye çalışsa PostgreSQL'in
+        # kendisi reddeder — sadece bizim yazdığımız koda bağlı değil.
+        constraints = [
+            models.CheckConstraint(
+                # İç içe class'lar (Meta), Vehicle'ın diğer iç class'larına
+                # (Fuel, Transmission) doğrudan erişemiyor (Python'da normal
+                # bir kapsam kısıtlaması) — bu yüzden ham metin değerlerini
+                # kullanıyoruz, zaten veritabanında öyle duruyorlar.
+                condition=~(models.Q(fuel="electric") & models.Q(transmission="manual")),
+                name="electric_vehicles_cannot_have_manual_transmission",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.brand} {self.model} ({self.plate})"

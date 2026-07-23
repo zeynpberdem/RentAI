@@ -33,6 +33,8 @@ class VehicleSerializer(serializers.ModelSerializer):
             "status",
             "location",
             "image",
+            "has_ac",
+            "is_4wd",
         ]
 
 
@@ -56,4 +58,17 @@ class VehicleWriteSerializer(serializers.ModelSerializer):
             "status",
             "location",
             "image",
+            "has_ac",
+            "is_4wd",
         ]
+
+    def validate(self, attrs):
+        # PATCH'te (kısmi güncelleme) sadece değişen alan attrs'te olur —
+        # değişmeyen tarafı, var olan kayıttan (self.instance) okuyoruz.
+        fuel = attrs.get("fuel", getattr(self.instance, "fuel", None))
+        transmission = attrs.get("transmission", getattr(self.instance, "transmission", None))
+
+        if fuel == Vehicle.Fuel.ELECTRIC and transmission == Vehicle.Transmission.MANUAL:
+            raise serializers.ValidationError("Elektrikli araçların manuel vitesi olamaz.")
+
+        return attrs

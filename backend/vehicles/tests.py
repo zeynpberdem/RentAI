@@ -131,3 +131,15 @@ class TestVehicleAdminCRUD:
         # Gerçekten silinmedi, sadece pasif hale getirildi.
         assert vehicle.is_active is False
         assert Vehicle.objects.filter(id=vehicle.id).exists()
+
+    def test_electric_manual_combination_rejected(self, authenticated_client, make_user, location):
+        admin = make_user(email="admin4@fleet.com", role=User.Role.ADMIN)
+        client = authenticated_client(admin)
+        payload = self._payload(location)
+        payload["fuel"] = "electric"
+        payload["transmission"] = "manual"
+
+        response = client.post("/api/vehicles", payload)
+
+        assert response.status_code == 400
+        assert not Vehicle.objects.filter(plate=payload["plate"]).exists()

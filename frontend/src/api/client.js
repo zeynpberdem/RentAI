@@ -4,6 +4,11 @@ import axios from 'axios'
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
+  // axios varsayılan olarak diziyi transmission[]=manual şeklinde gönderir;
+  // backend'deki (django-filter) MultipleChoiceFilter ise köşeli parantezsiz,
+  // tekrar eden anahtarlarla (transmission=manual&transmission=automatic)
+  // bekliyor. indexes: null bu formatı üretiyor.
+  paramsSerializer: { indexes: null },
 })
 
 // İstek gönderilmeden hemen önce çalışır: localStorage'da bir access token
