@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from handovers.views import HandoverCreateView
 from reservations.views import ReservationCancelView, ReservationListCreateView
+from service_requests.views import ServiceRequestListCreateView, ServiceRequestUpdateView
 from users.views import RegisterView
 from vehicles.views import VehicleDetailView, VehicleListView
 
@@ -32,6 +33,10 @@ urlpatterns = [
 
     # --- Handovers (PDF HND-1/HND-2) ---
     path('api/handovers', HandoverCreateView.as_view(), name='handover-create'),
+
+    # --- Service requests (PDF SRV-1/SRV-2) ---
+    path('api/service-requests', ServiceRequestListCreateView.as_view(), name='service-request-list-create'),
+    path('api/service-requests/<uuid:pk>', ServiceRequestUpdateView.as_view(), name='service-request-update'),
 
     # --- API docs (drf-spectacular) — endpoint'leri tarayıcıdan görüp
     # deneyebilmek için; Postman'e gerek kalmadan register/login test edilebilir.

@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "vehicles",
     "reservations",
     "handovers",
+    "service_requests",
 ]
 
 MIDDLEWARE = [
