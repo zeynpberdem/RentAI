@@ -1,62 +1,71 @@
 # Backend — Django REST Framework API
 
-Isolated Python project. Nothing here depends on the `frontend` folder.
+İzole bir Python projesi. `frontend` klasörüne hiçbir bağımlılığı yok.
 
-## Project structure
+## Proje yapısı
 
 ```
 backend/
-├── config/          Project core: settings.py, urls.py (see PDF section 2)
-├── users/           Custom User model (email login, role), auth endpoints, permissions
-├── vehicles/        Vehicle inventory: Location, Vehicle models (PDF section 3.2)
+├── config/          Proje çekirdeği: settings.py, urls.py
+├── core/            Ortak BaseModel (UUID id, soft-delete, audit alanları)
+├── users/           Özel User modeli (email girişi, rol), auth uç noktaları, izinler
+├── vehicles/        Araç envanteri: Location, Vehicle modelleri
+├── reservations/    Rezervasyon modeli, müsaitlik kontrolü
+├── handovers/       Teslim/İade modeli
+├── conftest.py      Ortak test fixture'ları
+├── pytest.ini       pytest yapılandırması
 ├── requirements.txt
-├── .env.example     Template — no real values, safe to commit
-└── .env             Real local values — git-ignored, never commit
+├── .env.example     Şablon — gerçek değer yok, commit edilebilir
+└── .env             Gerçek yerel değerler — git-ignored, asla commit edilmez
 ```
 
-## Setup (first time)
+## Kurulum (ilk kez)
 
-1. Create and activate a virtual environment:
+1. Sanal ortamı (venv) oluştur ve aktive et:
    ```
    python -m venv venv
    venv\Scripts\activate        # Windows
    ```
-2. Install dependencies:
+2. Bağımlılıkları kur:
    ```
    pip install -r requirements.txt
    ```
-3. Copy `.env.example` to `.env` and fill in real values (SECRET_KEY, PostgreSQL
-   credentials — see the root README for why these are separated).
-4. Make sure PostgreSQL is running and the database/user from `.env` exist
-   (see `POSTGRES_DB` / `POSTGRES_USER` in `.env.example`).
-5. Apply migrations and start the dev server:
+3. `.env.example`'ı `.env`'e kopyala, gerçek değerleri doldur (SECRET_KEY,
+   PostgreSQL bilgileri — bunların neden ayrı tutulduğu için kök README'ye bak).
+4. PostgreSQL çalışıyor olmalı, `.env`'deki veritabanı/kullanıcı hazır olmalı.
+5. Migration'ları uygula ve sunucuyu başlat:
    ```
    python manage.py migrate
    python manage.py runserver
    ```
 
-## Auth endpoints
+## API uç noktaları
 
-| Method | Endpoint             | Description                                   |
-|--------|-----------------------|------------------------------------------------|
-| POST   | `/api/auth/register`  | Create a new customer account                 |
-| POST   | `/api/auth/login`     | Exchange email+password for access/refresh JWT |
-| POST   | `/api/auth/refresh`   | Exchange a refresh token for a new access token|
-| GET    | `/api/docs`           | Interactive Swagger UI for all endpoints       |
+| Metot     | Adres                          | Açıklama                                  |
+|-----------|----------------------------------|--------------------------------------------|
+| POST      | `/api/auth/register`            | Yeni müşteri hesabı oluştur                |
+| POST      | `/api/auth/login`               | email+şifre → access/refresh JWT           |
+| POST      | `/api/auth/refresh`             | Yeni access token al                       |
+| GET       | `/api/vehicles`                 | Araç arama (filtre + sayfalama)            |
+| GET       | `/api/vehicles/{id}`            | Araç detayı                                |
+| GET/POST  | `/api/reservations`             | Kendi rezervasyonlarını listele / oluştur  |
+| POST      | `/api/reservations/{id}/cancel` | Rezervasyon iptali                         |
+| POST      | `/api/handovers`                | Teslim ya da iade kaydı (operatör)         |
+| GET       | `/api/docs`                     | İnteraktif Swagger arayüzü                 |
 
-## Status
+## Testler
 
-**Phase 2 — done.**
+```
+pytest
+```
+24 test — kayıt/giriş, araç arama, rezervasyon (çakışma kontrolü dahil),
+teslim/iade senaryolarını kapsıyor.
 
-- Django 5 + DRF project (`config`) connected to PostgreSQL via env vars
-  (no secrets in code — see `config/settings.py`).
-- Custom `User` model (`users` app): email login, `role` field
-  (customer/operator/admin).
-- `Vehicle` / `Location` models (`vehicles` app), first migration applied.
-- JWT auth (register/login/refresh) implemented and tested end-to-end.
-- Role-based permission classes (`IsCustomer`, `IsOperator`, `IsAdmin`) in
-  `users/permissions.py`, ready to be used once role-restricted endpoints
-  (vehicle CRUD, reservations, etc.) are built.
+## Durum
 
-Not yet done: vehicle search/CRUD API, reservations, everything past
-Week 2 of the PDF plan.
+**Hafta 1-2 tamamlandı** (ortam + kimlik doğrulama, araç envanteri,
+rezervasyon). **Hafta 3'ün yarısı tamamlandı** (teslim/iade bitti, bakım/servis
+talepleri henüz yok).
+
+Henüz yapılmadı: bakım/servis/yıkama talepleri, rakip fiyat karşılaştırması,
+dinamik fiyatlama, AI chatbot, raporlar, ve tüm frontend.

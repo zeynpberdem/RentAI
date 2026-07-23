@@ -7,6 +7,7 @@ import pytest
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from reservations.models import Reservation
 from users.models import User
 from vehicles.models import Location, Vehicle
 
@@ -55,4 +56,16 @@ def vehicle(db, location):
         plate="34TEST01",
         daily_price=1000,
         location=location,
+    )
+
+
+@pytest.fixture
+def reservation(db, vehicle, make_user):
+    customer = make_user(email="reservation-owner@example.com")
+    return Reservation.objects.create(
+        customer=customer,
+        vehicle=vehicle,
+        start_date="2026-08-05",
+        end_date="2026-08-08",
+        total_price=3000,
     )

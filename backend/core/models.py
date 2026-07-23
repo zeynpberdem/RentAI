@@ -27,7 +27,12 @@ class BaseModel(models.Model):
         editable=False,
     )
 
-    is_active = models.BooleanField(default=True)
+    # db_index=True: veri arttıkça (binlerce/milyonlarca kayıt), "sadece
+    # is_active=True olanları getir" sorgusu bu alan üzerinde bir index
+    # olmadan tüm tabloyu tek tek tarardı (yavaşlardı). Index, bu sorguyu
+    # tablonun büyüklüğünden bağımsız olarak hızlı tutar — pasif kayıtlar
+    # silinmeden birikse bile arama yavaşlamaz.
+    is_active = models.BooleanField(default=True, db_index=True)
 
     # settings.AUTH_USER_MODEL burada "users.User" gibi bir METİN olarak
     # kullanılıyor, doğrudan User class'ını import etmiyoruz — çünkü

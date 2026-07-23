@@ -1,4 +1,4 @@
-# RentAIpro
+# RentAI
 
 Araç kiralama ve rezervasyon yönetim sistemi — staj projesi.
 
@@ -48,6 +48,14 @@ Bkz. `backend/.env.example` ve `frontend/.env.example`.
 - Araç ve şube modelleri (Vehicle, Location) oluşturuldu
 - Araçları filtreleyerek listeleyen ve tek tek detayını gösteren API uç noktaları yazıldı, test edildi
 - Şifreler ve gizli ayarlar (SECRET_KEY, DB bilgileri) koddan ayrıldı, `.env` üzerinden okunuyor
+
+**22.07.2026 itibarıyla eklenenler:**
+
+- Tüm veri modelleri, ortak bir temel yapı (BaseModel) üzerinden yeniden düzenlendi: benzersiz kimlik (UUID), yumuşak silme (soft delete), kaydı oluşturan/güncelleyen/silen kullanıcı bilgisi (audit alanları) standart hale getirildi
+- Rezervasyon modülü eklendi: tarih çakışma kontrolü, fiyat hesabı, iptal, sadece kendi rezervasyonunu görebilme
+- Teslim/İade modülü eklendi: araç teslimiyle rezervasyon aktifleşiyor, iadede yakıt farkına göre ek ücret hesaplanıp rezervasyon tamamlanıyor
+- Otomatik test paketi (pytest) yazıldı — 24 test, hepsi geçiyor
+- `.gitignore` backend/frontend için ayrıştırıldı; performans için `is_active` alanına veritabanı index'i eklendi
 
 Detaylar için [backend/README.md](backend/README.md).
 

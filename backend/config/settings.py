@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "users",
     "vehicles",
     "reservations",
+    "handovers",
 ]
 
 MIDDLEWARE = [
