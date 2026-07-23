@@ -18,6 +18,10 @@ class ReservationListCreateView(generics.ListCreateAPIView):
     """
 
     permission_classes = [IsCustomer]
+    # RES-3: ?status=cancelled gibi bir sorgu parametresiyle filtreleme.
+    # Zaten kurulu DjangoFilterBackend (settings.py) sayesinde, özel bir
+    # FilterSet yazmaya gerek kalmadan tek satırla eşitlik filtresi kurulur.
+    filterset_fields = ["status"]
 
     def get_serializer_class(self):
         # Okuma (liste) ve yazma (oluşturma) için farklı serializer kullanıyoruz:

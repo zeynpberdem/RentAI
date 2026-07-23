@@ -87,6 +87,11 @@ class Vehicle(BaseModel):
         related_name="vehicles",
     )
 
+    # blank/null=True: her aracın görseli olmak zorunda değil, sonradan
+    # da eklenebilir. upload_to="vehicles/": dosyalar MEDIA_ROOT altında
+    # "vehicles/" klasörüne kaydedilir (bkz. config/settings.py).
+    image = models.ImageField(upload_to="vehicles/", blank=True, null=True)
+
     class Meta:
         db_table = "vehicles"
         ordering = ["-created_at"]

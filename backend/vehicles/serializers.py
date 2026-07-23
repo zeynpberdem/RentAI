@@ -32,4 +32,28 @@ class VehicleSerializer(serializers.ModelSerializer):
             "daily_price",
             "status",
             "location",
+            "image",
+        ]
+
+
+class VehicleWriteSerializer(serializers.ModelSerializer):
+    """Admin araç ekleme/düzenleme (VEH-1) — plaka ve şube burada YAZILABİLİR
+    (public VehicleSerializer'da plate bilerek yoktu, ama admin bunu görüp
+    girebilmeli)."""
+
+    class Meta:
+        model = Vehicle
+        fields = [
+            "id",
+            "brand",
+            "model",
+            "segment",
+            "transmission",
+            "fuel",
+            "seats",
+            "plate",
+            "daily_price",
+            "status",
+            "location",
+            "image",
         ]

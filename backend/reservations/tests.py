@@ -101,3 +101,20 @@ class TestReservationListAndCancel:
         response = client.post(f"/api/reservations/{created.data['id']}/cancel")
 
         assert response.status_code == 400
+
+    def test_list_filters_by_status(self, authenticated_client, make_user, vehicle):
+        client = authenticated_client(make_user())
+        cancelled = client.post(
+            "/api/reservations",
+            {"vehicle": str(vehicle.id), "start_date": "2026-08-05", "end_date": "2026-08-08"},
+        )
+        client.post(f"/api/reservations/{cancelled.data['id']}/cancel")
+        client.post(
+            "/api/reservations",
+            {"vehicle": str(vehicle.id), "start_date": "2026-09-05", "end_date": "2026-09-08"},
+        )
+
+        response = client.get("/api/reservations", {"status": "cancelled"})
+
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["status"] == "cancelled"

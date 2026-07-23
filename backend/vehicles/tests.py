@@ -2,6 +2,7 @@
 
 import pytest
 
+from users.models import User
 from vehicles.models import Vehicle
 
 
@@ -68,3 +69,65 @@ class TestVehicleDetail:
         response = api_client.get(f"/api/vehicles/{fake_id}")
 
         assert response.status_code == 404
+
+
+@pytest.mark.django_db
+class TestVehicleAdminCRUD:
+    def _payload(self, location):
+        return {
+            "brand": "Renault",
+            "model": "Clio",
+            "segment": "economy",
+            "transmission": "manual",
+            "fuel": "petrol",
+            "seats": 5,
+            "plate": "34NEW01",
+            "daily_price": 800,
+            "location": str(location.id),
+        }
+
+    def test_admin_can_create_vehicle(self, authenticated_client, make_user, location):
+        admin = make_user(email="admin@fleet.com", role=User.Role.ADMIN)
+        client = authenticated_client(admin)
+
+        response = client.post("/api/vehicles", self._payload(location))
+
+        assert response.status_code == 201
+        assert Vehicle.objects.filter(plate="34NEW01").exists()
+
+    def test_non_admin_cannot_create_vehicle(self, authenticated_client, make_user, location):
+        operator = make_user(email="operator@fleet.com", role=User.Role.OPERATOR)
+        client = authenticated_client(operator)
+
+        response = client.post("/api/vehicles", self._payload(location))
+
+        assert response.status_code == 403
+
+    def test_unauthenticated_cannot_create_vehicle(self, api_client, location):
+        response = api_client.post("/api/vehicles", self._payload(location))
+
+        assert response.status_code in (401, 403)
+
+    def test_admin_can_update_vehicle(self, authenticated_client, make_user, vehicle):
+        admin = make_user(email="admin2@fleet.com", role=User.Role.ADMIN)
+        client = authenticated_client(admin)
+
+        response = client.patch(
+            f"/api/vehicles/{vehicle.id}", {"daily_price": "1500.00"}, format="json"
+        )
+
+        assert response.status_code == 200
+        vehicle.refresh_from_db()
+        assert vehicle.daily_price == 1500
+
+    def test_admin_delete_soft_deletes(self, authenticated_client, make_user, vehicle):
+        admin = make_user(email="admin3@fleet.com", role=User.Role.ADMIN)
+        client = authenticated_client(admin)
+
+        response = client.delete(f"/api/vehicles/{vehicle.id}")
+
+        assert response.status_code == 204
+        vehicle.refresh_from_db()
+        # Gerçekten silinmedi, sadece pasif hale getirildi.
+        assert vehicle.is_active is False
+        assert Vehicle.objects.filter(id=vehicle.id).exists()

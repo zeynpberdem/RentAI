@@ -1,5 +1,7 @@
 """URL configuration for the RentAI project."""
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -43,3 +45,10 @@ urlpatterns = [
     path('api/schema', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
+
+# TR: Yüklenen araç görsellerini yerel geliştirmede tarayıcıdan görebilmek
+# için — bu, sadece DEBUG=True iken devreye girer; gerçek (prod) ortamda
+# medya dosyaları normalde ayrı bir sunucu/servis (nginx, S3 vb.) tarafından
+# sunulur, Django'nun kendisi değil.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

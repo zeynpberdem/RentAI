@@ -1,0 +1,66 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Testler icin gecici bir PostgreSQL kutusu. Bu, bizim gercek
+    # veritabanimiz DEGIL -- her calistirmada sifirdan olusturulur,
+    # test bitince silinir.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: fleet_rental_db
+          POSTGRES_USER: fleet_rental_user
+          POSTGRES_PASSWORD: ci_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Bagimliliklari kur
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      # Gercek .env dosyasi Git'e hic girmedigi icin burada yok -- bu
+      # yuzden CI'a ozel, sadece bu calistirma icin gecerli, uydurma
+      # degerler tanimliyoruz.
+      - name: Migration'lari uygula
+        working-directory: backend
+        env:
+          DJANGO_SECRET_KEY: ci-test-secret-key
+          DJANGO_DEBUG: "True"
+          DJANGO_ALLOWED_HOSTS: localhost
+          POSTGRES_DB: fleet_rental_db
+          POSTGRES_USER: fleet_rental_user
+          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+        run: python manage.py migrate
+
+      - name: Testleri calistir
+        working-directory: backend
+        env:
+          DJANGO_SECRET_KEY: ci-test-secret-key
+          DJANGO_DEBUG: "True"
+          DJANGO_ALLOWED_HOSTS: localhost
+          POSTGRES_DB: fleet_rental_db
+          POSTGRES_USER: fleet_rental_user
+          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+        run: pytest
