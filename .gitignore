@@ -1,8 +1,0 @@
-# Root .gitignore — only OS/editor files that don't belong to either side.
-# Backend-specific ignores: backend/.gitignore
-# Frontend-specific ignores: frontend/.gitignore
-
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db

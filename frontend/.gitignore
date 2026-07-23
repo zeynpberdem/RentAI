@@ -10,3 +10,9 @@
 node_modules/
 dist/
 .vite/
+
+# ---- Editor / OS (root .gitignore kaldırıldı, kurallar buraya taşındı) ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
