@@ -4,7 +4,7 @@
 // "kullanıcı giriş yapmış mı" bilgisine ihtiyaç duyar.
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import apiClient from '../api/client'
+import apiClient from '../../api/client'
 
 export const useAuthStore = defineStore('auth', () => {
   // localStorage'dan okuyarak başlıyoruz: sayfa yenilense (F5) bile

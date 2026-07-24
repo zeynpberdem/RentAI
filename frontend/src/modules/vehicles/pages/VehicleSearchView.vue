@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import apiClient from '../api/client'
+import apiClient from '../../../api/client'
 
 const vehicles = ref([])
 const count = ref(0)

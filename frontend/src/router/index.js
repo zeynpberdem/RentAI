@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import VehicleSearchView from '../views/VehicleSearchView.vue'
-import { useAuthStore } from '../stores/auth'
+import LoginView from '../modules/auth/pages/LoginView.vue'
+import RegisterView from '../modules/auth/pages/RegisterView.vue'
+import { useAuthStore } from '../modules/auth/store'
+import VehicleSearchView from '../modules/vehicles/pages/VehicleSearchView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
