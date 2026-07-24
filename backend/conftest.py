@@ -8,7 +8,9 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reservations.models import Reservation
+from users.helpers import Role
 from users.models import User
+from vehicles.helpers import Fuel, Segment, Transmission
 from vehicles.models import Location, Vehicle
 
 
@@ -21,7 +23,7 @@ def api_client():
 def make_user(db):
     """Belirli bir role sahip kullanıcı oluşturan bir fabrika (factory) döner."""
 
-    def _make_user(email="user@example.com", password="TestSifre123!", role=User.Role.CUSTOMER):
+    def _make_user(email="user@example.com", password="TestSifre123!", role=Role.CUSTOMER):
         return User.objects.create_user(email=email, password=password, role=role)
 
     return _make_user
@@ -49,9 +51,9 @@ def vehicle(db, location):
     return Vehicle.objects.create(
         brand="Toyota",
         model="Corolla",
-        segment=Vehicle.Segment.MID,
-        transmission=Vehicle.Transmission.AUTOMATIC,
-        fuel=Vehicle.Fuel.PETROL,
+        segment=Segment.MID,
+        transmission=Transmission.AUTOMATIC,
+        fuel=Fuel.PETROL,
         seats=5,
         plate="34TEST01",
         daily_price=1000,

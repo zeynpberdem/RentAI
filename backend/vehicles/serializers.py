@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 
+from .helpers import Fuel, Transmission
 from .models import Location, Vehicle
 
 
@@ -68,7 +69,7 @@ class VehicleWriteSerializer(serializers.ModelSerializer):
         fuel = attrs.get("fuel", getattr(self.instance, "fuel", None))
         transmission = attrs.get("transmission", getattr(self.instance, "transmission", None))
 
-        if fuel == Vehicle.Fuel.ELECTRIC and transmission == Vehicle.Transmission.MANUAL:
+        if fuel == Fuel.ELECTRIC and transmission == Transmission.MANUAL:
             raise serializers.ValidationError("Elektrikli araçların manuel vitesi olamaz.")
 
         return attrs

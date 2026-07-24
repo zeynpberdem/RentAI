@@ -4,15 +4,16 @@ from rest_framework import serializers
 
 from vehicles.serializers import VehicleSerializer
 
+from .helpers import Status
 from .models import ServiceRequest
 
 # Bir durumdan hangi durumlara geçilebileceğinin haritası. Boş küme = son
 # durum, buradan başka hiçbir yere geçilemez.
 ALLOWED_STATUS_TRANSITIONS = {
-    ServiceRequest.Status.OPEN: {ServiceRequest.Status.IN_PROGRESS, ServiceRequest.Status.CANCELLED},
-    ServiceRequest.Status.IN_PROGRESS: {ServiceRequest.Status.DONE, ServiceRequest.Status.CANCELLED},
-    ServiceRequest.Status.DONE: set(),
-    ServiceRequest.Status.CANCELLED: set(),
+    Status.OPEN: {Status.IN_PROGRESS, Status.CANCELLED},
+    Status.IN_PROGRESS: {Status.DONE, Status.CANCELLED},
+    Status.DONE: set(),
+    Status.CANCELLED: set(),
 }
 
 

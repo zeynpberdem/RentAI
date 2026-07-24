@@ -3,7 +3,7 @@
 import pytest
 
 from reservations.models import Reservation
-from users.models import User
+from users.helpers import Role
 
 
 @pytest.mark.django_db
@@ -51,7 +51,7 @@ class TestReservationCreate:
         assert response.status_code == 201
 
     def test_non_customer_cannot_create_reservation(self, authenticated_client, make_user, vehicle):
-        operator = make_user(email="operator@fleet.com", role=User.Role.OPERATOR)
+        operator = make_user(email="operator@fleet.com", role=Role.OPERATOR)
         client = authenticated_client(operator)
 
         response = client.post(

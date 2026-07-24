@@ -6,24 +6,10 @@ from django.db import models
 from core.models import BaseModel
 from vehicles.models import Vehicle
 
+from .helpers import Priority, RequestType, Status
+
 
 class ServiceRequest(BaseModel):
-    class RequestType(models.TextChoices):
-        MAINTENANCE = "maintenance", "Maintenance"  # Bakım
-        SERVICE = "service", "Service"                # Servis
-        WASH = "wash", "Wash"                          # Yıkama
-
-    class Priority(models.TextChoices):
-        LOW = "low", "Low"          # Düşük
-        NORMAL = "normal", "Normal"
-        HIGH = "high", "High"       # Yüksek
-
-    class Status(models.TextChoices):
-        OPEN = "open", "Open"                  # Açık
-        IN_PROGRESS = "in_progress", "In Progress"  # İşlemde
-        DONE = "done", "Done"                  # Tamamlandı
-        CANCELLED = "cancelled", "Cancelled"    # İptal
-
     vehicle = models.ForeignKey(
         Vehicle,
         on_delete=models.PROTECT,

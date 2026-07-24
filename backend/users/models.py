@@ -21,6 +21,7 @@ from django.db import models
 
 from core.models import BaseModel
 
+from .helpers import Role
 from .managers import UserManager
 
 
@@ -35,11 +36,6 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     created_at/updated_at/deleted_at alanlarını miras alıyor — burada
     tekrar tanımlamıyoruz.
     """
-
-    class Role(models.TextChoices):
-        CUSTOMER = "customer", "Customer"    # Müşteri
-        OPERATOR = "operator", "Operator"    # Operatör
-        ADMIN = "admin", "Admin"             # Yönetici
 
     email = models.EmailField(unique=True)  # Giriş kimliği — benzersiz olmalı
     role = models.CharField(
@@ -67,12 +63,12 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
     @property
     def is_admin(self):
-        return self.role == self.Role.ADMIN
+        return self.role == Role.ADMIN
 
     @property
     def is_operator(self):
-        return self.role == self.Role.OPERATOR
+        return self.role == Role.OPERATOR
 
     @property
     def is_customer(self):
-        return self.role == self.Role.CUSTOMER
+        return self.role == Role.CUSTOMER

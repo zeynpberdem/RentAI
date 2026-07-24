@@ -6,15 +6,10 @@ from django.db import models
 from core.models import BaseModel
 from vehicles.models import Vehicle
 
+from .helpers import Status
+
 
 class Reservation(BaseModel):
-    class Status(models.TextChoices):
-        PENDING = "pending", "Pending"        # Onay bekliyor
-        CONFIRMED = "confirmed", "Confirmed"  # Onaylandı
-        ACTIVE = "active", "Active"            # Araç şu an müşteride
-        COMPLETED = "completed", "Completed"   # İade edildi, tamamlandı
-        CANCELLED = "cancelled", "Cancelled"    # İptal edildi
-
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

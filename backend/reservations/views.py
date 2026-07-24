@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from users.permissions import IsCustomer
 
+from .helpers import Status
 from .models import Reservation
 from .serializers import ReservationCreateSerializer, ReservationSerializer
 
@@ -56,12 +57,12 @@ class ReservationCancelView(APIView):
             Reservation.active_objects, pk=pk, customer=request.user
         )
 
-        if reservation.status in (Reservation.Status.CANCELLED, Reservation.Status.COMPLETED):
+        if reservation.status in (Status.CANCELLED, Status.COMPLETED):
             return Response(
                 {"detail": "Bu rezervasyon zaten iptal edilmiş ya da tamamlanmış."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        reservation.status = Reservation.Status.CANCELLED
+        reservation.status = Status.CANCELLED
         reservation.save()
         return Response(ReservationSerializer(reservation).data)

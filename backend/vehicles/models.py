@@ -16,6 +16,8 @@ from django.db import models
 
 from core.models import BaseModel
 
+from .helpers import Fuel, Segment, Status, Transmission
+
 
 class Location(BaseModel):
     """A branch / office where vehicles are based and returned."""
@@ -33,27 +35,6 @@ class Location(BaseModel):
 
 class Vehicle(BaseModel):
     """A single rentable car in the fleet."""
-
-    class Segment(models.TextChoices):
-        ECONOMY = "economy", "Economy"     # Ekonomi
-        MID = "mid", "Mid-size"            # Orta segment
-        SUV = "suv", "SUV"
-        LUXURY = "luxury", "Luxury"        # Lüks
-
-    class Transmission(models.TextChoices):
-        MANUAL = "manual", "Manual"        # Manuel vites
-        AUTOMATIC = "automatic", "Automatic"  # Otomatik vites
-
-    class Fuel(models.TextChoices):
-        PETROL = "petrol", "Petrol"        # Benzin
-        DIESEL = "diesel", "Diesel"        # Dizel
-        ELECTRIC = "electric", "Electric"  # Elektrik
-        HYBRID = "hybrid", "Hybrid"        # Hibrit
-
-    class Status(models.TextChoices):
-        AVAILABLE = "available", "Available"       # Müsait / kiralanabilir
-        RENTED = "rented", "Rented"                 # Şu an kirada
-        MAINTENANCE = "maintenance", "Maintenance"   # Bakımda / kiralanamaz
 
     brand = models.CharField(max_length=50)    # Marka, örn. "Toyota"
     model = models.CharField(max_length=50)    # Model, örn. "Corolla"
@@ -105,11 +86,11 @@ class Vehicle(BaseModel):
         # kendisi reddeder — sadece bizim yazdığımız koda bağlı değil.
         constraints = [
             models.CheckConstraint(
-                # İç içe class'lar (Meta), Vehicle'ın diğer iç class'larına
-                # (Fuel, Transmission) doğrudan erişemiyor (Python'da normal
-                # bir kapsam kısıtlaması) — bu yüzden ham metin değerlerini
-                # kullanıyoruz, zaten veritabanında öyle duruyorlar.
-                condition=~(models.Q(fuel="electric") & models.Q(transmission="manual")),
+                # Fuel/Transmission artık helpers.py'dan import edilen, dosya
+                # seviyesinde tanımlı sınıflar olduğu için (eskiden olduğu gibi
+                # Vehicle'ın içine gömülü DEĞİL) burada doğrudan isimleriyle
+                # kullanılabiliyorlar — ham metin yazmaya gerek kalmadı.
+                condition=~(models.Q(fuel=Fuel.ELECTRIC) & models.Q(transmission=Transmission.MANUAL)),
                 name="electric_vehicles_cannot_have_manual_transmission",
             ),
         ]

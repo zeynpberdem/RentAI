@@ -2,6 +2,7 @@
 
 import pytest
 
+from users.helpers import Role
 from users.models import User
 
 
@@ -19,7 +20,7 @@ class TestRegister:
 
         user = User.objects.get(email="yeni@fleet.com")
         # Kayıt sırasında role gönderilmedi, varsayılan customer olmalı.
-        assert user.role == User.Role.CUSTOMER
+        assert user.role == Role.CUSTOMER
         # Şifre hash'lenmiş olmalı, düz metin olarak SAKLANMAMALI.
         assert user.password != "SuperGucluSifre123!"
 

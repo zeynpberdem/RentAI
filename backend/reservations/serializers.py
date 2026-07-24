@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from vehicles.serializers import VehicleSerializer
 
+from .helpers import Status
 from .models import Reservation
 
 
@@ -50,7 +51,7 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
             vehicle=attrs["vehicle"],
             start_date__lt=end,
             end_date__gt=start,
-        ).exclude(status__in=[Reservation.Status.CANCELLED, Reservation.Status.COMPLETED])
+        ).exclude(status__in=[Status.CANCELLED, Status.COMPLETED])
 
         if conflicting.exists():
             raise serializers.ValidationError(

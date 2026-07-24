@@ -2,6 +2,9 @@
 
 import django_filters
 
+from reservations.helpers import Status as ReservationStatus
+
+from .helpers import Fuel, Transmission
 from .models import Vehicle
 
 
@@ -26,8 +29,8 @@ class VehicleFilter(django_filters.FilterSet):
     # MultipleChoiceFilter: checkbox'larla "otomatik VEYA manuel" gibi
     # birden fazla değer seçilebilsin diye — Meta.fields'taki varsayılan
     # filtre sadece TEK bir değeri kabul ederdi (tam eşitlik).
-    transmission = django_filters.MultipleChoiceFilter(choices=Vehicle.Transmission.choices)
-    fuel = django_filters.MultipleChoiceFilter(choices=Vehicle.Fuel.choices)
+    transmission = django_filters.MultipleChoiceFilter(choices=Transmission.choices)
+    fuel = django_filters.MultipleChoiceFilter(choices=Fuel.choices)
 
     class Meta:
         model = Vehicle
@@ -57,7 +60,7 @@ class VehicleFilter(django_filters.FilterSet):
             start_date__lt=end,
             end_date__gt=start,
         ).exclude(
-            status__in=[Reservation.Status.CANCELLED, Reservation.Status.COMPLETED]
+            status__in=[ReservationStatus.CANCELLED, ReservationStatus.COMPLETED]
         ).values_list("vehicle_id", flat=True)
 
         return queryset.exclude(id__in=conflicting_vehicle_ids)

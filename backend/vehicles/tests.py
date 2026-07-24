@@ -2,7 +2,8 @@
 
 import pytest
 
-from users.models import User
+from users.helpers import Role
+from vehicles.helpers import Fuel, Segment, Transmission
 from vehicles.models import Vehicle
 
 
@@ -31,8 +32,8 @@ class TestVehicleList:
 
     def test_list_filters_by_segment(self, api_client, vehicle, location):
         Vehicle.objects.create(
-            brand="Jeep", model="Compass", segment=Vehicle.Segment.SUV,
-            transmission=Vehicle.Transmission.AUTOMATIC, fuel=Vehicle.Fuel.DIESEL,
+            brand="Jeep", model="Compass", segment=Segment.SUV,
+            transmission=Transmission.AUTOMATIC, fuel=Fuel.DIESEL,
             seats=5, plate="34SUV01", daily_price=2000, location=location,
         )
 
@@ -43,8 +44,8 @@ class TestVehicleList:
 
     def test_list_filters_by_price_range(self, api_client, vehicle, location):
         Vehicle.objects.create(
-            brand="Jeep", model="Compass", segment=Vehicle.Segment.SUV,
-            transmission=Vehicle.Transmission.AUTOMATIC, fuel=Vehicle.Fuel.DIESEL,
+            brand="Jeep", model="Compass", segment=Segment.SUV,
+            transmission=Transmission.AUTOMATIC, fuel=Fuel.DIESEL,
             seats=5, plate="34SUV02", daily_price=2000, location=location,
         )
 
@@ -87,7 +88,7 @@ class TestVehicleAdminCRUD:
         }
 
     def test_admin_can_create_vehicle(self, authenticated_client, make_user, location):
-        admin = make_user(email="admin@fleet.com", role=User.Role.ADMIN)
+        admin = make_user(email="admin@fleet.com", role=Role.ADMIN)
         client = authenticated_client(admin)
 
         response = client.post("/api/vehicles", self._payload(location))
@@ -96,7 +97,7 @@ class TestVehicleAdminCRUD:
         assert Vehicle.objects.filter(plate="34NEW01").exists()
 
     def test_non_admin_cannot_create_vehicle(self, authenticated_client, make_user, location):
-        operator = make_user(email="operator@fleet.com", role=User.Role.OPERATOR)
+        operator = make_user(email="operator@fleet.com", role=Role.OPERATOR)
         client = authenticated_client(operator)
 
         response = client.post("/api/vehicles", self._payload(location))
@@ -109,7 +110,7 @@ class TestVehicleAdminCRUD:
         assert response.status_code in (401, 403)
 
     def test_admin_can_update_vehicle(self, authenticated_client, make_user, vehicle):
-        admin = make_user(email="admin2@fleet.com", role=User.Role.ADMIN)
+        admin = make_user(email="admin2@fleet.com", role=Role.ADMIN)
         client = authenticated_client(admin)
 
         response = client.patch(
@@ -121,7 +122,7 @@ class TestVehicleAdminCRUD:
         assert vehicle.daily_price == 1500
 
     def test_admin_delete_soft_deletes(self, authenticated_client, make_user, vehicle):
-        admin = make_user(email="admin3@fleet.com", role=User.Role.ADMIN)
+        admin = make_user(email="admin3@fleet.com", role=Role.ADMIN)
         client = authenticated_client(admin)
 
         response = client.delete(f"/api/vehicles/{vehicle.id}")
@@ -133,7 +134,7 @@ class TestVehicleAdminCRUD:
         assert Vehicle.objects.filter(id=vehicle.id).exists()
 
     def test_electric_manual_combination_rejected(self, authenticated_client, make_user, location):
-        admin = make_user(email="admin4@fleet.com", role=User.Role.ADMIN)
+        admin = make_user(email="admin4@fleet.com", role=Role.ADMIN)
         client = authenticated_client(admin)
         payload = self._payload(location)
         payload["fuel"] = "electric"

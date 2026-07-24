@@ -5,12 +5,10 @@ from django.db import models
 from core.models import BaseModel
 from reservations.models import Reservation
 
+from .helpers import Type
+
 
 class Handover(BaseModel):
-    class Type(models.TextChoices):
-        DELIVERY = "delivery", "Delivery"  # Teslim
-        RETURN = "return", "Return"        # İade
-
     reservation = models.ForeignKey(
         Reservation,
         on_delete=models.PROTECT,
