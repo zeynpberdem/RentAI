@@ -2,8 +2,22 @@
 
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User
+
+
+class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Standart giriş, tek farkla: üretilen access token'ın içine `role`
+    claim'ini de ekler — frontend, hangi rolde giriş yapıldığını (müşteri/
+    operatör/admin) bir uç noktaya daha istek atmadan, token'ın kendisinden
+    okuyabilsin diye (örn. "Operatör Paneli" linkini sadece operatöre göster)."""
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["role"] = user.role
+        return token
 
 
 class RegisterSerializer(serializers.ModelSerializer):

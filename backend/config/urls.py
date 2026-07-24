@@ -5,12 +5,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from handovers.views import HandoverCreateView
 from reservations.views import ReservationCancelView, ReservationListCreateView
 from service_requests.views import ServiceRequestListCreateView, ServiceRequestUpdateView
-from users.views import RegisterView
+from users.views import RegisterView, RoleTokenObtainPairView
 from vehicles.views import LocationListView, VehicleDetailView, VehicleListView
 
 urlpatterns = [
@@ -18,8 +18,9 @@ urlpatterns = [
 
     # --- Auth (PDF: POST /api/auth/register · /login · /refresh) ---
     path('api/auth/register', RegisterView.as_view(), name='auth-register'),
-    # TokenObtainPairView: email+password alır, {access, refresh} döner.
-    path('api/auth/login', TokenObtainPairView.as_view(), name='auth-login'),
+    # RoleTokenObtainPairView: email+password alır, {access, refresh} döner;
+    # access token'ın içine ayrıca kullanıcının rolü gömülür.
+    path('api/auth/login', RoleTokenObtainPairView.as_view(), name='auth-login'),
     # TokenRefreshView: eski refresh token'dan yeni access token üretir.
     path('api/auth/refresh', TokenRefreshView.as_view(), name='auth-refresh'),
 

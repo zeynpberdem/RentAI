@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { backendOrigin } from '../../../api/client'
 import { useAuthStore } from '../store'
 
 const email = ref('')
@@ -17,7 +18,17 @@ async function handleSubmit() {
 
   try {
     await authStore.login(email.value, password.value)
-    router.push('/')
+
+    // Rol bazlı yönlendirme: müşteri araç arama ekranını görür (asıl
+    // storefront), operatör kendi paneline gider, admin ise Vue tarafında
+    // hiç ekranı olmadığı için doğrudan Django admin paneline çıkar.
+    if (authStore.role === 'admin') {
+      window.location.href = `${backendOrigin}/admin/`
+    } else if (authStore.role === 'operator') {
+      router.push('/operator')
+    } else {
+      router.push('/')
+    }
   } catch (error) {
     // 401: backend "email/şifre yanlış" dediğinde döner (bkz. SimpleJWT).
     if (error.response && error.response.status === 401) {

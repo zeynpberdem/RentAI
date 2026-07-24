@@ -5,7 +5,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from users.permissions import IsCustomer
+from users.permissions import IsCustomer, IsOperator
 
 from .helpers import Status
 from .models import Reservation
@@ -14,15 +14,23 @@ from .serializers import ReservationCreateSerializer, ReservationSerializer
 
 class ReservationListCreateView(generics.ListCreateAPIView):
     """
-    GET /api/reservations  -> müşteri sadece KENDİ rezervasyonlarını görür (RES-3)
-    POST /api/reservations -> müşteri kendi adına rezervasyon açar (RES-1)
+    GET /api/reservations  -> müşteri KENDİ rezervasyonlarını (RES-3),
+                               operatör TÜM rezervasyonları görür (teslim/iade
+                               kaydı açarken doğru rezervasyonu bulabilsin diye).
+    POST /api/reservations -> sadece müşteri, kendi adına rezervasyon açar (RES-1)
     """
 
-    permission_classes = [IsCustomer]
     # RES-3: ?status=cancelled gibi bir sorgu parametresiyle filtreleme.
     # Zaten kurulu DjangoFilterBackend (settings.py) sayesinde, özel bir
     # FilterSet yazmaya gerek kalmadan tek satırla eşitlik filtresi kurulur.
     filterset_fields = ["status"]
+
+    def get_permissions(self):
+        # Oluşturma sadece müşterinin işi; operatör kimin adına olduğunu
+        # belirleyip başkası adına rezervasyon açamamalı.
+        if self.request.method == "POST":
+            return [IsCustomer()]
+        return [(IsCustomer | IsOperator)()]
 
     def get_serializer_class(self):
         # Okuma (liste) ve yazma (oluşturma) için farklı serializer kullanıyoruz:
@@ -33,10 +41,10 @@ class ReservationListCreateView(generics.ListCreateAPIView):
         return ReservationSerializer
 
     def get_queryset(self):
-        return (
-            Reservation.active_objects.filter(customer=self.request.user)
-            .select_related("vehicle", "vehicle__location")
-        )
+        queryset = Reservation.active_objects.select_related("vehicle", "vehicle__location")
+        if self.request.user.role == "operator":
+            return queryset
+        return queryset.filter(customer=self.request.user)
 
     def perform_create(self, serializer):
         # customer, istekte gönderilmez — her zaman giriş yapmış kullanıcının

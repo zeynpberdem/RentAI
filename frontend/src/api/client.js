@@ -2,6 +2,11 @@
 // kullanacağız, tekrar tekrar "baseURL nedir" yazmamıza gerek kalmasın diye.
 import axios from 'axios'
 
+// VITE_API_BASE_URL "http://localhost:8000/api" gibi — sondaki "/api"'yi
+// atınca backend'in kök adresi kalır. Admin girişinde Django admin paneline
+// (backend/admin/) yönlendirirken kullanılıyor (bkz. router/index.js).
+export const backendOrigin = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   // axios varsayılan olarak diziyi transmission[]=manual şeklinde gönderir;
