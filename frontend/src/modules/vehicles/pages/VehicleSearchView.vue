@@ -1,6 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import apiClient from '../../../api/client'
+import { useAuthStore } from '../../auth/store'
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const vehicles = ref([])
 const count = ref(0)
@@ -8,6 +13,10 @@ const nextUrl = ref(null)
 const previousUrl = ref(null)
 const isLoading = ref(false)
 const errorMessage = ref('')
+// Hangi aracın rezervasyonu yapılıyor / sonucu ne oldu — id'ye göre tutuluyor
+// ki bir karttaki işlem diğer kartları etkilemesin.
+const reservingVehicleId = ref(null)
+const reservationMessages = ref({})
 // Kullanıcı üstteki arama çubuğuyla en az bir kez arama yapana kadar
 // sonuç listesini hiç göstermiyoruz — site ilk açıldığında sadece
 // arama çubuğu görünsün istendi.
@@ -106,6 +115,38 @@ const priceFormatter = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2
 
 function formatPrice(price) {
   return priceFormatter.format(Number(price))
+}
+
+async function reserveVehicle(vehicle) {
+  if (!authStore.isAuthenticated) {
+    router.push('/login')
+    return
+  }
+
+  reservingVehicleId.value = vehicle.id
+  reservationMessages.value = { ...reservationMessages.value, [vehicle.id]: '' }
+  try {
+    // Kartta gösterilen araçlar zaten arama çubuğundaki tarih aralığında
+    // müsait olacak şekilde filtrelenmişti (bkz. filter_availability),
+    // bu yüzden rezervasyonu da aynı tarih aralığıyla açıyoruz.
+    await apiClient.post('/reservations', {
+      vehicle: vehicle.id,
+      start_date: dateRange.value.start_date,
+      end_date: dateRange.value.end_date,
+    })
+    reservationMessages.value = {
+      ...reservationMessages.value,
+      [vehicle.id]: { type: 'success', text: 'Rezervasyon oluşturuldu.' },
+    }
+  } catch (error) {
+    const detail = error.response?.data?.non_field_errors?.[0]
+    reservationMessages.value = {
+      ...reservationMessages.value,
+      [vehicle.id]: { type: 'error', text: detail || 'Rezervasyon oluşturulamadı.' },
+    }
+  } finally {
+    reservingVehicleId.value = null
+  }
 }
 
 onMounted(() => {
@@ -214,6 +255,20 @@ onMounted(() => {
 
                 <p class="price">{{ formatPrice(vehicle.daily_price) }} TL/gün</p>
                 <p class="location">{{ vehicle.location.name }}, {{ vehicle.location.city }}</p>
+
+                <button
+                  class="reserve-button"
+                  :disabled="reservingVehicleId === vehicle.id"
+                  @click="reserveVehicle(vehicle)"
+                >
+                  {{ reservingVehicleId === vehicle.id ? 'Gönderiliyor...' : 'Rezervasyon Yap' }}
+                </button>
+                <p
+                  v-if="reservationMessages[vehicle.id]"
+                  :class="reservationMessages[vehicle.id].type === 'error' ? 'error' : 'success'"
+                >
+                  {{ reservationMessages[vehicle.id].text }}
+                </p>
               </div>
             </div>
           </div>
@@ -378,6 +433,33 @@ onMounted(() => {
 .location {
   color: #666;
   font-size: 0.9rem;
+}
+
+.reserve-button {
+  margin-top: 0.75rem;
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  background: #1a73e8;
+  color: white;
+  cursor: pointer;
+}
+
+.reserve-button:hover {
+  background: #1558b0;
+}
+
+.reserve-button:disabled {
+  background: #9bb8e0;
+  cursor: default;
+}
+
+.success {
+  color: #1a8c3f;
+  font-size: 0.85rem;
 }
 
 .pagination {

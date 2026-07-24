@@ -16,6 +16,7 @@ function handleLogout() {
     <router-link to="/" class="brand">RentAI</router-link>
     <nav>
       <template v-if="authStore.isAuthenticated">
+        <router-link to="/rezervasyonlarim">Rezervasyonlarım</router-link>
         <button @click="handleLogout">Çıkış Yap</button>
       </template>
       <template v-else>
