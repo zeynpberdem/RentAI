@@ -57,6 +57,14 @@ Bkz. `backend/.env.example` ve `frontend/.env.example`.
 - Otomatik test paketi (pytest) yazıldı — 24 test, hepsi geçiyor
 - `.gitignore` backend/frontend için ayrıştırıldı; performans için `is_active` alanına veritabanı index'i eklendi
 
+**23.07.2026 itibarıyla eklenenler:**
+
+- Araç fiyatları Türkçe binlik ayraç formatında gösteriliyor (örn. `1.231 TL/gün`)
+- Araç arama ekranının kullanıcı akışı gerçek kiralama sitelerine benzer hale getirildi: sayfa ilk açıldığında sadece üstteki arama çubuğu (şube + tarih) görünüyor; kullanıcı arama yapmadan araç listesi ve filtre paneli gösterilmiyor
+- Arama çubuğu görsel olarak büyütülüp ortalandı, sayfanın öne çıkan ("hero") kısmı hâline getirildi
+- Repo kökü sadeleştirildi: kök `.gitignore` kaldırıldı, kuralları `backend/.gitignore` ve `frontend/.gitignore`'a taşındı (kökte sadece `README.md`, `backend/`, `frontend/` ve CI için zorunlu olan `.github/` kaldı)
+- TextChoices sınıfları (Role, Segment, Transmission, Fuel, Status, Type, RequestType, Priority) modellerin içinden çıkarılıp her app'in kendi `helpers.py` dosyasına taşındı; ilgili tüm serializer/filter/view/test dosyaları güncellendi — 37 test hâlâ geçiyor
+
 Detaylar için [backend/README.md](backend/README.md).
 
-Frontend: henüz başlanmadı.
+**Frontend:** JWT giriş/kayıt ekranları ve ana araç arama ekranı (arama çubuğu, filtreler, görselli araç kartları, sayfalama) çalışır durumda. Henüz yok: rezervasyon oluşturma ekranı, rol bazlı (operatör/admin) paneller.
