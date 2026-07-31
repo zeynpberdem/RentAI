@@ -13,3 +13,18 @@ class Role(models.TextChoices):
     CUSTOMER = "customer", "Customer"    # Müşteri
     OPERATOR = "operator", "Operator"    # Operatör
     ADMIN = "admin", "Admin"             # Yönetici
+
+
+class LicenseClass(models.TextChoices):
+    """Türkiye'deki sürücü belgesi sınıfları — bkz. profil tamamlama akışı."""
+
+    A1 = "A1", "A1"
+    A2 = "A2", "A2"
+    A = "A", "A"
+    B1 = "B1", "B1"
+    B = "B", "B"
+    BE = "BE", "BE"
+    C1 = "C1", "C1"
+    C = "C", "C"
+    D1 = "D1", "D1"
+    D = "D", "D"

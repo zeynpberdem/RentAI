@@ -1,0 +1,6 @@
+# graphify tarafından üretilen kod grafiği — üretilmiş dosya, repoya girmemeli.
+graphify-out/
+
+# Yerel Claude Code ayarları (makineye özel mutlak yollar, kişisel izinler,
+# yüklü skill dosyaları) — proje içeriği değil, repoya girmemeli.
+.claude/

@@ -1,69 +1,416 @@
+/*
+  Tasarım sistemi kaynağı: ui-ux-pro-max skill (--design-system sorgusu,
+  "internal admin dashboard SaaS clean minimal professional" için "Flat
+  Design" stili + Inter tipografi önerisi). Tüm sayfalar bu dosyadaki
+  CSS değişkenlerini ve ortak bileşen sınıflarını (.panel-card, .btn,
+  .data-table, .badge vb.) kullanır — her sayfanın kendi <style> bloğunda
+  aynı kartı/tabloyu yeniden tanımlamasını önlemek için.
+*/
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
+  --color-primary: #0d9488;
+  --color-primary-hover: #0f766e;
+  --color-primary-soft: #ccfbf1;
+  --color-on-primary: #ffffff;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --color-bg: #f6f8f9;
+  --color-surface: #ffffff;
+  --color-foreground: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  --color-success: #16a34a;
+  --color-success-soft: #e7f6ec;
+  --color-info: #2563eb;
+  --color-info-soft: #eaf1fd;
+  --color-warning: #d97706;
+  --color-warning-soft: #fdf1e0;
+  --color-destructive: #dc2626;
+  --color-destructive-soft: #fbe9e9;
+  --color-accent-soft: #f3eefb;
+  --color-accent: #7c3aed;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.06);
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  font: 15px/1.5 var(--font-sans);
+  color-scheme: light;
+  color: var(--color-foreground);
+  background: var(--color-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-foreground);
+  background: var(--color-bg);
 }
 
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+h2,
+h3 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--color-foreground);
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-size: 1.75rem;
 }
+
 h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+  font-size: 1.1rem;
+  font-weight: 600;
 }
+
 p {
   margin: 0;
+}
+
+a {
+  color: inherit;
 }
 
 #app {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ortak sayfa iskeleti — operatör panelindeki her sayfa bunu kullanır  */
+/* ------------------------------------------------------------------ */
+
+.fleet-page {
+  max-width: 1400px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Kart / panel                                                        */
+/* ------------------------------------------------------------------ */
+
+.panel-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.panel-card h2 {
+  margin: 0 0 1rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Formlar                                                             */
+/* ------------------------------------------------------------------ */
+
+.search-input {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  min-width: 260px;
+}
+
+.search-input:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: var(--color-foreground);
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+label {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Butonlar                                                            */
+/* ------------------------------------------------------------------ */
+
+button,
+.btn {
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+button:hover,
+.btn:hover {
+  background: var(--color-primary-hover);
+}
+
+button:active,
+.btn:active {
+  transform: translateY(1px);
+}
+
+button.secondary,
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+button.secondary:hover,
+.btn-secondary:hover {
+  background: var(--color-primary-soft);
+}
+
+/* Metin butonlarının başına ikon eklemek için ortak yardımcı sınıf
+   (ör. "Ara", "+ Yeni", "Dışa Aktar") — buton stilini değiştirmez, sadece
+   içeriği ikon+metin olacak şekilde hizalar. */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-icon svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+.cancel-link {
+  background: none;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.cancel-link:hover {
+  background: none;
+  color: var(--color-foreground);
+  text-decoration: underline;
+}
+
+/* ------------------------------------------------------------------ */
+/* Filtre pilleri                                                      */
+/* ------------------------------------------------------------------ */
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.filter-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.filter-pill.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.count-badge {
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+/* Filtre pili olmayan, sadece "N kayıt" sayacı gösteren tablolarda —
+   panel-card'ın içinde, tablonun hemen üstünde tek satırlık bir alan. */
+.table-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tablo                                                               */
+/* ------------------------------------------------------------------ */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 0.65rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 0.75rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-bg);
+}
+
+/* ------------------------------------------------------------------ */
+/* Rozet / durum etiketleri                                            */
+/* ------------------------------------------------------------------ */
+
+.badge,
+.status-badge,
+.profile-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-border);
+  color: var(--color-muted);
+}
+
+.badge.success,
+.status-badge.status-2,
+.status-badge.status-3,
+.status-badge.available,
+.profile-badge.complete {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.profile-badge.incomplete {
+  background: var(--color-destructive-soft);
+  color: var(--color-destructive);
+}
+
+.badge.info,
+.status-badge.status-1,
+.status-badge.rented {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
+.badge.warning,
+.status-badge.maintenance {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.badge.destructive,
+.status-badge.status-99 {
+  background: var(--color-destructive-soft);
+  color: var(--color-destructive);
+}
+
+.source-pill {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Yardımcı durumlar                                                   */
+/* ------------------------------------------------------------------ */
+
+.empty-state {
+  color: var(--color-muted);
+  text-align: center;
+  padding: 3rem 0;
+  font-size: 0.9rem;
+}
+
+.error {
+  color: var(--color-destructive);
+  font-size: 0.9rem;
+}
+
+.success {
+  color: var(--color-success);
+  font-size: 0.9rem;
+}
+
+.warning {
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
 }

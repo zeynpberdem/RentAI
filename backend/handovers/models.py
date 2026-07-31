@@ -14,7 +14,7 @@ class Handover(BaseModel):
         on_delete=models.PROTECT,
         related_name="handovers",
     )
-    type = models.CharField(max_length=20, choices=Type.choices)
+    type = models.CharField(max_length=40, choices=Type.choices)
     odometer_km = models.PositiveIntegerField()
     fuel_level = models.PositiveSmallIntegerField()  # yüzde, 0-100
     damage_notes = models.TextField(blank=True)

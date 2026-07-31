@@ -3,46 +3,20 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from rest_framework_simplejwt.views import TokenRefreshView
-
-from handovers.views import HandoverCreateView
-from reservations.views import ReservationCancelView, ReservationListCreateView
-from service_requests.views import ServiceRequestListCreateView, ServiceRequestUpdateView
-from users.views import RegisterView, RoleTokenObtainPairView
-from vehicles.views import LocationListView, VehicleDetailView, VehicleListView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # --- Auth (PDF: POST /api/auth/register · /login · /refresh) ---
-    path('api/auth/register', RegisterView.as_view(), name='auth-register'),
-    # RoleTokenObtainPairView: email+password alır, {access, refresh} döner;
-    # access token'ın içine ayrıca kullanıcının rolü gömülür.
-    path('api/auth/login', RoleTokenObtainPairView.as_view(), name='auth-login'),
-    # TokenRefreshView: eski refresh token'dan yeni access token üretir.
-    path('api/auth/refresh', TokenRefreshView.as_view(), name='auth-refresh'),
-
-    # --- Locations (arama ekranındaki şube seçimi için) ---
-    path('api/locations', LocationListView.as_view(), name='location-list'),
-
-    # --- Vehicles (PDF VEH-2: GET /api/vehicles, filtre + sayfalama) ---
-    path('api/vehicles', VehicleListView.as_view(), name='vehicle-list'),
-    # --- Vehicle detail (PDF VEH-3) ---
-    # uuid:pk -> ID'ler artık integer değil UUID (BaseModel'den geliyor).
-    path('api/vehicles/<uuid:pk>', VehicleDetailView.as_view(), name='vehicle-detail'),
-
-    # --- Reservations (PDF RES-1/2/3) ---
-    path('api/reservations', ReservationListCreateView.as_view(), name='reservation-list-create'),
-    path('api/reservations/<uuid:pk>/cancel', ReservationCancelView.as_view(), name='reservation-cancel'),
-
-    # --- Handovers (PDF HND-1/HND-2) ---
-    path('api/handovers', HandoverCreateView.as_view(), name='handover-create'),
-
-    # --- Service requests (PDF SRV-1/SRV-2) ---
-    path('api/service-requests', ServiceRequestListCreateView.as_view(), name='service-request-list-create'),
-    path('api/service-requests/<uuid:pk>', ServiceRequestUpdateView.as_view(), name='service-request-update'),
+    # Her app'in kendi uc noktalari kendi urls.py'sinde tanimli — "reservations
+    # ile ilgili bir API mi ariyorum" dersen direkt reservations/urls.py'ye
+    # bakman yetiyor, tum route'lari burada aramana gerek kalmiyor.
+    path('api/auth/', include('users.urls')),
+    path('api/', include('vehicles.urls')),
+    path('api/reservations', include('reservations.urls')),
+    path('api/handovers', include('handovers.urls')),
+    path('api/service-requests', include('service_requests.urls')),
 
     # --- API docs (drf-spectacular) — endpoint'leri tarayıcıdan görüp
     # deneyebilmek için; Postman'e gerek kalmadan register/login test edilebilir.

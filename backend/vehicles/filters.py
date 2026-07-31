@@ -1,6 +1,7 @@
 """Filters for GET /api/vehicles — see PDF VEH-2 (segment/vites/fiyat/tarih filtreleri)."""
 
 import django_filters
+from django.db.models import Q
 
 from reservations.helpers import Status as ReservationStatus
 
@@ -9,6 +10,11 @@ from .models import Vehicle
 
 
 class VehicleFilter(django_filters.FilterSet):
+    # Tek bir arama kutusu; plaka/marka/model'den herhangi birine uyan
+    # araçları döner — frontend'de arama backend'e gidiyor (client-side
+    # değil), bu yüzden büyük filo/sayfalama ile de doğru çalışır.
+    search = django_filters.CharFilter(method="filter_search")
+
     # daily_price bir ARALIK (min/max) olarak filtrelenmek istendiği için
     # (örn. "1000 TL altı"), django-filter'ın hazır RangeFilter'ını
     # kullanıyoruz — bu tek satır, ?daily_price_min= ve ?daily_price_max=
@@ -64,3 +70,6 @@ class VehicleFilter(django_filters.FilterSet):
         ).values_list("vehicle_id", flat=True)
 
         return queryset.exclude(id__in=conflicting_vehicle_ids)
+
+    def filter_search(self, queryset, name, value):
+        return queryset.filter(Q(plate__icontains=value) | Q(brand__icontains=value) | Q(model__icontains=value))

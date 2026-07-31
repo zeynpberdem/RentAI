@@ -13,6 +13,41 @@ from .models import Handover
 FUEL_SHORTAGE_RATE_PER_PERCENT = 20
 
 
+class HandoverListSerializer(serializers.ModelSerializer):
+    """GET /api/handovers — Teslimat Listesi ekranı. Yazma serializer'ının
+    (HandoverSerializer) aksine, aracı/müşteriyi okunabilir şekilde
+    (plaka, marka/model, ad) gösterir; reservation'ı ayrıca id olarak
+    tekrar göstermeye gerek yok, zaten vehicle/customer bilgisi yeterli."""
+
+    vehicle_plate = serializers.CharField(source="reservation.vehicle.plate", read_only=True)
+    vehicle_label = serializers.SerializerMethodField()
+    customer_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Handover
+        fields = [
+            "id",
+            "type",
+            "vehicle_plate",
+            "vehicle_label",
+            "customer_name",
+            "odometer_km",
+            "fuel_level",
+            "damage_notes",
+            "extra_charge",
+            "created_at",
+        ]
+
+    def get_vehicle_label(self, handover):
+        vehicle = handover.reservation.vehicle
+        return f"{vehicle.brand} {vehicle.model}"
+
+    def get_customer_name(self, handover):
+        customer = handover.reservation.customer
+        full_name = f"{customer.first_name} {customer.last_name}".strip()
+        return full_name or customer.email
+
+
 class HandoverSerializer(serializers.ModelSerializer):
     class Meta:
         model = Handover

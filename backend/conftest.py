@@ -21,10 +21,30 @@ def api_client():
 
 @pytest.fixture
 def make_user(db):
-    """Belirli bir role sahip kullanıcı oluşturan bir fabrika (factory) döner."""
+    """Belirli bir role sahip kullanıcı oluşturan bir fabrika (factory) döner.
 
-    def _make_user(email="user@example.com", password="TestSifre123!", role=Role.CUSTOMER):
-        return User.objects.create_user(email=email, password=password, role=role)
+    Profil alanları (tc_no vb.) varsayılan olarak DOLU geliyor — rezervasyon
+    testlerinin çoğu "profili tamamlanmış bir müşteri" varsayıyor. Profili
+    eksik bir kullanıcı test etmek istersen complete_profile=False ver.
+    """
+
+    def _make_user(
+        email="user@example.com",
+        password="TestSifre123!",
+        role=Role.CUSTOMER,
+        complete_profile=True,
+    ):
+        extra = {}
+        if complete_profile:
+            extra = {
+                "first_name": "Test",
+                "last_name": "Kullanıcı",
+                "tc_no": "12345678901",
+                "birth_date": "1995-01-01",
+                "license_class": "B",
+                "license_issue_date": "2015-01-01",
+            }
+        return User.objects.create_user(email=email, password=password, role=role, **extra)
 
     return _make_user
 

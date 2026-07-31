@@ -25,6 +25,13 @@ class Location(BaseModel):
     name = models.CharField(max_length=100)   # Şube adı, örn. "Kadıköy Şubesi"
     city = models.CharField(max_length=100)   # Şehir, filtreleme/arama için ayrı tutuluyor
 
+    # Basit "Canlı Takip" haritası için — gerçek GPS/canlı konum DEĞİL,
+    # sadece şubenin sabit enlem/boylamı. Bir araç, bulunduğu şubenin
+    # konumunda gösterilir (bkz. Hafta 4 kapsam kararı: gerçek zamanlı
+    # GPS simülasyonu junior staj kapsamının dışında tutuldu).
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
     class Meta:
         db_table = "locations"
         ordering = ["city", "name"]
@@ -47,6 +54,12 @@ class Vehicle(BaseModel):
     # oluşturur), yukarıdaki choices alanlarından farklı olarak veritabanı
     # seviyesinde de aynı plakayı iki kez engeller.
     plate = models.CharField(max_length=20, unique=True)
+
+    # ACRISS/SIPP kodu: kiralama şirketlerinin gerçekte kullandığı, 4 harfli
+    # standart araç sınıflandırma kodu (örn. "CDMR") — bkz. Ziraat Filo
+    # referansındaki "Araç SIPP Kodu" sütunu. Zorunlu değil, henüz her araca
+    # elle girilmiş olmayabilir.
+    sipp_code = models.CharField(max_length=4, blank=True)
 
     daily_price = models.DecimalField(max_digits=10, decimal_places=2)
     # Decimal kullandık, float DEĞİL — para/fiyat hesaplarında float

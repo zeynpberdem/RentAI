@@ -96,6 +96,27 @@ class TestVehicleAdminCRUD:
         assert response.status_code == 201
         assert Vehicle.objects.filter(plate="34NEW01").exists()
 
+    def test_admin_can_set_sipp_code(self, authenticated_client, make_user, location):
+        admin = make_user(email="admin-sipp@fleet.com", role=Role.ADMIN)
+        client = authenticated_client(admin)
+
+        payload = {**self._payload(location), "sipp_code": "CDMR"}
+        response = client.post("/api/vehicles", payload)
+
+        assert response.status_code == 201
+        assert Vehicle.objects.get(plate="34NEW01").sipp_code == "CDMR"
+
+    def test_staff_view_includes_sipp_code(self, authenticated_client, make_user, vehicle):
+        vehicle.sipp_code = "EDAR"
+        vehicle.save()
+        operator = make_user(email="operator-sipp@fleet.com", role=Role.OPERATOR)
+        client = authenticated_client(operator)
+
+        response = client.get("/api/vehicles")
+
+        result = next(v for v in response.data["results"] if v["id"] == str(vehicle.id))
+        assert result["sipp_code"] == "EDAR"
+
     def test_non_admin_cannot_create_vehicle(self, authenticated_client, make_user, location):
         operator = make_user(email="operator@fleet.com", role=Role.OPERATOR)
         client = authenticated_client(operator)
@@ -144,3 +165,5 @@ class TestVehicleAdminCRUD:
 
         assert response.status_code == 400
         assert not Vehicle.objects.filter(plate=payload["plate"]).exists()
+
+

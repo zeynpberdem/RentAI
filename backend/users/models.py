@@ -21,7 +21,7 @@ from django.db import models
 
 from core.models import BaseModel
 
-from .helpers import Role
+from .helpers import LicenseClass, Role
 from .managers import UserManager
 
 
@@ -49,6 +49,19 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     # bir "operator" iş rolü olabilir ama admin paneline girmeyebilir.
     is_staff = models.BooleanField(default=False)
 
+    # --- Profil tamamlama alanları (sadece müşteri için zorunlu) ---
+    # Kayıt sırasında BİLEREK istenmiyor — kayıt formu kısa kalsın, ilk
+    # girişte ayrı bir "Profilimi Tamamla" adımında doldurulur (bkz.
+    # ReservationCreateSerializer.validate: profil tamamlanmadan rezervasyon
+    # açılamaz).
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    tc_no = models.CharField(max_length=11, blank=True)
+    birth_date = models.DateField(null=True, blank=True)
+    license_class = models.CharField(max_length=2, choices=LicenseClass.choices, blank=True)
+    license_issue_date = models.DateField(null=True, blank=True)
+    license_number = models.CharField(max_length=30, blank=True)  # Ehliyet üzerindeki seri/numara
+
     objects = UserManager()
 
     USERNAME_FIELD = "email"       # login() çağrısında kullanılacak alan
@@ -72,3 +85,17 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     @property
     def is_customer(self):
         return self.role == Role.CUSTOMER
+
+    @property
+    def is_profile_complete(self):
+        # Sadece müşteri için anlamlı bir kavram — operatör/admin hesapları
+        # zaten elle (personel olarak) açılıyor, bu alanları doldurmaları
+        # beklenmiyor.
+        return bool(
+            self.first_name
+            and self.last_name
+            and self.tc_no
+            and self.birth_date
+            and self.license_class
+            and self.license_issue_date
+        )

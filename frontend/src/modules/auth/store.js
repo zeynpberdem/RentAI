@@ -1,15 +1,15 @@
 // Giriş yapan kullanıcının token'larını burada tutuyoruz. Pinia, Vue'nun
 // "birden fazla component'in aynı veriyi paylaşması" ihtiyacına cevap veren
-// state yönetim aracı — örn. hem giriş ekranı hem menü çubuğu, aynı anda
-// "kullanıcı giriş yapmış mı" bilgisine ihtiyaç duyar.
+// state yönetim aracı — örn. hem router guard hem sayfa içi kodlar, aynı
+// anda "kullanıcı giriş yapmış mı, hangi rolde" bilgisine ihtiyaç duyar.
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import apiClient from '../../api/client'
+import * as authService from './services'
 
 // JWT'nin ortadaki bölümü (payload), base64url ile kodlanmış bir JSON'dur.
 // Backend, login sırasında bu payload'ın içine "role" ve "user_id" koyuyor
 // (bkz. RoleTokenObtainPairSerializer) — burada onu çözüp okuyoruz, ekstra
-// bir "/me" isteği atmaya gerek kalmadan.
+// bir istek atmaya gerek kalmadan.
 function decodeToken(token) {
   if (!token) return null
   try {
@@ -32,7 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isOperator = computed(() => role.value === 'operator')
 
   async function login(email, password) {
-    const response = await apiClient.post('/auth/login', { email, password })
+    const response = await authService.login(email, password)
 
     accessToken.value = response.data.access
     refreshToken.value = response.data.refresh
