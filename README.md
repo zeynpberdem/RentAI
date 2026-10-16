@@ -30,3 +30,38 @@ Geliştirilebilir Özellikler
 Mobil Saha Teslimat Modülü: Saha personeli için fotoğraflı hasar tespiti ve dijital imza entegrasyonu.
 Pazar Bazlı Dinamik Fiyatlandırma: Şube doluluk oranlarına ve sezonluk talebe göre SIPP katsayılarını optimize eden tahminleme algoritması.
 Gelişmiş ZETO Hibrit Modeli: Kural tabanlı durum makinesinin, doğal dilde analitik filo sorguları çalıştırabilen bir dil modeli katmanıyla genişletilmesi.
+
+## Projeyi çalıştırma
+
+**Gereksinimler (önceden kurulu olmalı):** Python 3.12+, Node.js 18+,
+PostgreSQL (çalışır durumda, bir sunucu/servis olarak).
+
+İki ayrı terminal gerekiyor — biri backend, biri frontend için. Her ikisi
+de aynı anda çalışır durumda olmalı.
+
+**1) Backend (terminal 1):**
+cd backend
+python -m venv venv
+venv\Scripts\activate              # Windows (macOS/Linux: source venv/bin/activate)
+pip install -r requirements.txt
+
+
+PostgreSQL'de `.env.example`'daki isimlerle bir veritabanı/kullanıcı oluştur,
+`.env.example`'ı `.env`'e kopyalayıp doldur, sonra:
+python manage.py migrate
+python manage.py createsuperuser   # ilk hesap — rolü otomatik "admin" olur
+python manage.py runserver
+
+
+`http://localhost:8000/admin/` adresinden bu hesapla giriş yapıp **Users**
+kısmından rolü `operator` olan bir kullanıcı ekle — filo panelinde (frontend)
+giriş yapacağın hesap bu olacak. Detay: [backend/README.md](backend/README.md).
+
+**2) Frontend (terminal 2):**
+cd frontend
+npm install
+`.env.example`'ı `.env`'e kopyala (varsayılan ayar yerel backend'i hedefler),
+sonra:
+npm run dev
+`http://localhost:5173/login` adresini aç, az önce oluşturduğun `operator`
+hesabıyla giriş yap. Detay: [frontend/README.md](frontend/README.md).
