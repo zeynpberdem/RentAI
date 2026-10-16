@@ -39,7 +39,12 @@ RentAI/
 - PostgreSQL (sunucu/servis olarak çalışır durumda)
 
 Sistem iki parçadan oluştuğu için **iki ayrı terminal** gerekir: biri backend, biri frontend için. İkisi aynı anda açık kalmalıdır.
+### Projeyi indirme
 
+```bash
+git clone https://github.com/zeynpberdem/RentAI.git
+cd RentAI
+```
 ### 1) Veritabanını hazırlama
 
 PostgreSQL'de bir veritabanı ve kullanıcı oluşturun. İsimler `backend/.env.example` dosyasındakilerle aynı olmalıdır:
