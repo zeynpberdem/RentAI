@@ -12,7 +12,7 @@ RentAI, operasyonel filo kiralama şirketlerinin günlük araç takibi, dinamik 
 Proje, bağımsız bağımlılık yönetimi ve güvenlik izolasyonu amacıyla iki modüler katman halinde yapılandırılmıştır:
 
 ```text
-fleet-rental-platform/
+RentAI/
 ├── backend/     Django REST Framework API (Python)
 ├── frontend/    Vue 3 SPA (Vite & Tailwind CSS)
 └── docs/        Proje analiz ve dokümantasyon
