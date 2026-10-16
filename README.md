@@ -19,6 +19,49 @@ fleet-rental-platform/
 - [backend/README.md](backend/README.md) — API kurulumu ve yapısı
 - [frontend/README.md](frontend/README.md) — SPA kurulumu ve yapısı
 
+Not: Proje 31 Temmuz'da müşteri self-servis modelinden operatör-only bir
+filo yönetim paneline çevrildi — müşteri artık siteye kendi giriş yapıp
+araç kiralamıyor, her şeyi operatör panelden yönetiyor.
+
+## Projeyi çalıştırma
+
+**Gereksinimler (önceden kurulu olmalı):** Python 3.12+, Node.js 18+,
+PostgreSQL (çalışır durumda, bir sunucu/servis olarak).
+
+İki ayrı terminal gerekiyor — biri backend, biri frontend için. Her ikisi
+de aynı anda çalışır durumda olmalı.
+
+**1) Backend (terminal 1):**
+```
+cd backend
+python -m venv venv
+venv\Scripts\activate              # Windows (macOS/Linux: source venv/bin/activate)
+pip install -r requirements.txt
+```
+PostgreSQL'de `.env.example`'daki isimlerle bir veritabanı/kullanıcı oluştur,
+`.env.example`'ı `.env`'e kopyalayıp doldur, sonra:
+```
+python manage.py migrate
+python manage.py createsuperuser   # ilk hesap — rolü otomatik "admin" olur
+python manage.py runserver
+```
+`http://localhost:8000/admin/` adresinden bu hesapla giriş yapıp **Users**
+kısmından rolü `operator` olan bir kullanıcı ekle — filo panelinde (frontend)
+giriş yapacağın hesap bu olacak. Detay: [backend/README.md](backend/README.md).
+
+**2) Frontend (terminal 2):**
+```
+cd frontend
+npm install
+```
+`.env.example`'ı `.env`'e kopyala (varsayılan ayar yerel backend'i hedefler),
+sonra:
+```
+npm run dev
+```
+`http://localhost:5173/login` adresini aç, az önce oluşturduğun `operator`
+hesabıyla giriş yap. Detay: [frontend/README.md](frontend/README.md).
+
 ## Neden ayrı tutuyoruz?
 
 - **Bağımsız bağımlılıklar** — backend pip/venv, frontend npm/node_modules
