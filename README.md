@@ -19,11 +19,11 @@ fleet-rental-platform/
 └── docs/        Proje analiz ve dokümantasyon
 
 ## Teknoloji Yığını (Tech Stack)
-* **Backend: Python, Django REST Framework (DRF)
-* **Frontend: Vue 3 (Composition API), Pinia, Tailwind CSS, Leaflet.js
-* **Veritabanı: PostgreSQL (UUID birincil anahtarlar)
-* **Test & CI/CD: Pytest (24+ otomatik iş kuralı testi), GitHub Actions
-* **Yetkilendirme: JWT (JSON Web Tokens) & Token Blacklisting
+* Backend: Python, Django REST Framework (DRF)
+* Frontend: Vue 3 (Composition API), Pinia, Tailwind CSS, Leaflet.js
+* Veritabanı: PostgreSQL (UUID birincil anahtarlar)
+* Test & CI/CD: Pytest (24+ otomatik iş kuralı testi), GitHub Actions
+* Yetkilendirme: JWT (JSON Web Tokens) & Token Blacklisting
 
 Geliştirilebilir Özellikler
  Gerçek Zamanlı Telematik & IoT Entegrasyonu (OBD-II): Araç takip cihazları üzerinden anlık kilometre, yakıt seviyesi ve motor arıza kodlarının (DTC) otomatik çekilmesi.
