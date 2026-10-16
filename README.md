@@ -18,7 +18,7 @@ fleet-rental-platform/
 ├── frontend/    Vue 3 SPA (Vite & Tailwind CSS)
 └── docs/        Proje analiz ve dokümantasyon
 
-Teknoloji Yığını (Tech Stack)
+## Teknoloji Yığını (Tech Stack)
 Backend: Python, Django REST Framework (DRF)
 Frontend: Vue 3 (Composition API), Pinia, Tailwind CSS, Leaflet.js
 Veritabanı: PostgreSQL (UUID birincil anahtarlar)
