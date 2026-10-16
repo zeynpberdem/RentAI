@@ -26,42 +26,43 @@ fleet-rental-platform/
 * Yetkilendirme: JWT (JSON Web Tokens) & Token Blacklisting
 
 Geliştirilebilir Özellikler
- Gerçek Zamanlı Telematik & IoT Entegrasyonu (OBD-II): Araç takip cihazları üzerinden anlık kilometre, yakıt seviyesi ve motor arıza kodlarının (DTC) otomatik çekilmesi.
-Mobil Saha Teslimat Modülü: Saha personeli için fotoğraflı hasar tespiti ve dijital imza entegrasyonu.
-Pazar Bazlı Dinamik Fiyatlandırma: Şube doluluk oranlarına ve sezonluk talebe göre SIPP katsayılarını optimize eden tahminleme algoritması.
-Gelişmiş ZETO Hibrit Modeli: Kural tabanlı durum makinesinin, doğal dilde analitik filo sorguları çalıştırabilen bir dil modeli katmanıyla genişletilmesi.
+*Gerçek Zamanlı Telematik & IoT Entegrasyonu (OBD-II): Araç takip cihazları üzerinden anlık kilometre, yakıt seviyesi ve motor arıza kodlarının (DTC) otomatik çekilmesi.
+*Mobil Saha Teslimat Modülü: Saha personeli için fotoğraflı hasar tespiti ve dijital imza entegrasyonu.
+*Pazar Bazlı Dinamik Fiyatlandırma: Şube doluluk oranlarına ve sezonluk talebe göre SIPP katsayılarını optimize eden tahminleme algoritması.
+*Gelişmiş ZETO Hibrit Modeli: Kural tabanlı durum makinesinin, doğal dilde analitik filo sorguları çalıştırabilen bir dil modeli katmanıyla genişletilmesi.
 
-## Projeyi çalıştırma
+*Projeyi Çalıştırma
+Gereksinimler (önceden kurulu olmalı): Python 3.12+, Node.js 18+, PostgreSQL (çalışır durumda, bir servis/sunucu olarak).
+İki ayrı terminal gerekiyor — biri backend, biri frontend için. Her ikisi de aynı anda çalışır durumda olmalıdır.
 
-**Gereksinimler (önceden kurulu olmalı):** Python 3.12+, Node.js 18+,
-PostgreSQL (çalışır durumda, bir sunucu/servis olarak).
-
-İki ayrı terminal gerekiyor — biri backend, biri frontend için. Her ikisi
-de aynı anda çalışır durumda olmalı.
-
-**1) Backend (terminal 1):**
+1) Backend (Terminal 1)
+Bash
 cd backend
 python -m venv venv
-venv\Scripts\activate              # Windows (macOS/Linux: source venv/bin/activate)
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
 pip install -r requirements.txt
+PostgreSQL üzerinde .env.example dosyasındaki isimlerle bir veritabanı/kullanıcı oluşturun, ardından .env.example dosyasını .env olarak kopyalayıp bilgileri doldurun:
 
-
-PostgreSQL'de `.env.example`'daki isimlerle bir veritabanı/kullanıcı oluştur,
-`.env.example`'ı `.env`'e kopyalayıp doldur, sonra:
+Bash
 python manage.py migrate
-python manage.py createsuperuser   # ilk hesap — rolü otomatik "admin" olur
+python manage.py createsuperuser   # İlk hesap — rolü otomatik "admin" olur
 python manage.py runserver
+Operatör Hesabı Oluşturma:
 
+http://localhost:8000/admin/ adresinden oluşturduğunuz süper kullanıcı ile giriş yapın. Users modülünden rolü operator olan bir kullanıcı tanımlayın; frontend filo paneline bu hesap ile giriş yapılacaktır. Detaylar için: backend/README.md.
 
-`http://localhost:8000/admin/` adresinden bu hesapla giriş yapıp **Users**
-kısmından rolü `operator` olan bir kullanıcı ekle — filo panelinde (frontend)
-giriş yapacağın hesap bu olacak. Detay: [backend/README.md](backend/README.md).
-
-**2) Frontend (terminal 2):**
+2) Frontend (Terminal 2)
+Bash
 cd frontend
 npm install
-`.env.example`'ı `.env`'e kopyala (varsayılan ayar yerel backend'i hedefler),
-sonra:
+.env.example dosyasını .env olarak kopyalayın (varsayılan ayar yerel backend sunucusunu hedefler) ve sunucuyu başlatın:
+
+Bash
 npm run dev
-`http://localhost:5173/login` adresini aç, az önce oluşturduğun `operator`
-hesabıyla giriş yap. Detay: [frontend/README.md](frontend/README.md).
+Giriş:
+
+Tarayıcıdan http://localhost:5173/login adresini açın ve az önce oluşturduğunuz operator hesabıyla giriş yapın. Detaylar için: frontend/README.md.
