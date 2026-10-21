@@ -2,12 +2,17 @@
 
 from rest_framework import serializers
 
-from handovers.helpers import Type as HandoverType
 from handovers.models import Handover
+from handovers.serializers import DAMAGE_MARKUP_RATE, _damage_line_items
 from vehicles.models import Location
 from vehicles.serializers import LocationSerializer, VehicleStaffSerializer
 
-from .helpers import MIN_DRIVER_AGE_BY_SEGMENT, MIN_LICENSE_EXPERIENCE_YEARS_BY_SEGMENT, Status
+from .helpers import (
+    MIN_DRIVER_AGE_BY_SEGMENT,
+    MIN_FINDEKS_SCORE_BY_SEGMENT,
+    MIN_LICENSE_EXPERIENCE_YEARS_BY_SEGMENT,
+    Status,
+)
 from .models import Reservation
 
 
@@ -22,11 +27,23 @@ def _full_years_between(later_date, earlier_date):
 
 class ReservationHistoryEventSerializer(serializers.ModelSerializer):
     """Rezervasyon Geçmişi (yaşam döngüsü) penceresinde teslim/iade
-    olaylarını göstermek için yalın bir görünüm — sadece tür + zaman."""
+    olaylarını göstermek için bir görünüm. odometer_km/fuel_level de dahil:
+    İade Al ekranında, teslim anındaki değerlerle karşılaştırma yapmak için
+    (bkz. FleetReservationsView.vue openEditHandover)."""
+
+    # Fiyat dökümünde hasarı tek satır yerine parça parça (ve maliyetiyle
+    # birlikte) göstermek için — bkz. handovers/serializers.py _damage_line_items.
+    # markup=DAMAGE_MARKUP_RATE: burası müşteriden GERÇEKTEN alınan tutarı
+    # gösterir (extra_charge'a giden de bu), Bakım Merkezi'ndeki (marjsız,
+    # gerçek maliyet) damage_items'tan kasıtlı olarak farklı.
+    damage_items = serializers.SerializerMethodField()
 
     class Meta:
         model = Handover
-        fields = ["type", "created_at"]
+        fields = ["type", "created_at", "odometer_km", "fuel_level", "damage_notes", "extra_charge", "damage_items"]
+
+    def get_damage_items(self, handover):
+        return _damage_line_items(handover.damage_notes, markup=DAMAGE_MARKUP_RATE)
 
 
 class ReservationSerializer(serializers.ModelSerializer):
@@ -44,6 +61,11 @@ class ReservationSerializer(serializers.ModelSerializer):
     return_location = LocationSerializer(read_only=True)
     is_extended = serializers.SerializerMethodField()
     is_early_return = serializers.SerializerMethodField()
+    early_return_amount = serializers.DecimalField(
+        source="early_return_discount", max_digits=10, decimal_places=2, read_only=True
+    )
+    is_late_return = serializers.SerializerMethodField()
+    late_fee_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     handovers = ReservationHistoryEventSerializer(many=True, read_only=True)
 
     class Meta:
@@ -62,7 +84,11 @@ class ReservationSerializer(serializers.ModelSerializer):
             "total_price",
             "pricing_snapshot",
             "is_extended",
+            "extension_amount",
             "is_early_return",
+            "early_return_amount",
+            "is_late_return",
+            "late_fee_amount",
             "created_at",
             "extended_at",
             "cancelled_at",
@@ -77,17 +103,15 @@ class ReservationSerializer(serializers.ModelSerializer):
         return reservation.extended_at is not None
 
     def get_is_early_return(self, reservation):
-        # Rezervasyon Listesi'nde tutarın yanına "-" koymak için: gerçek
-        # iade (Handover type=return) kaydı, planlanan end_date'ten ÖNCE
-        # yapılmışsa erken teslim edilmiş demektir.
-        if reservation.status != Status.COMPLETED:
-            return False
-        return_handover = next(
-            (h for h in reservation.handovers.all() if h.type == HandoverType.RETURN), None
-        )
-        if not return_handover:
-            return False
-        return return_handover.created_at.date() < reservation.end_date.date()
+        # Rezervasyon Listesi'nde tutarın yanına "-" koymak için — artık
+        # HandoverSerializer.create() tarafından iade anında hesaplanıp
+        # kalıcı olarak yazılan early_return_discount'a bakıyoruz.
+        return reservation.early_return_discount > 0
+
+    def get_is_late_return(self, reservation):
+        # Rezervasyon Listesi'nde tutarın yanına "+" koymak için — bkz.
+        # HandoverSerializer.create()'teki late_fee_amount hesabı.
+        return reservation.late_fee_amount > 0
 
 
 class ReservationCreateSerializer(serializers.ModelSerializer):
@@ -125,10 +149,10 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("end_date, start_date'ten sonra olmalı.")
 
         # Otomatik uygunluk kontrolü (referans projedeki gibi — ayrı bir
-        # "operatör onaylıyor" ekranı YOK): segmente göre minimum sürücü yaşı
-        # VE minimum ehliyet deneyimi. İkisi de kiralama BAŞLANGICINDAKİ
-        # duruma göre hesaplanır (bugünkü tarihe göre değil), ileri tarihli
-        # bir rezervasyon doğru değerlendirilsin diye.
+        # "operatör onaylıyor" ekranı YOK): segmente göre minimum sürücü yaşı,
+        # minimum ehliyet deneyimi VE (üst segmentlerde) minimum Findeks skoru.
+        # Yaş/deneyim kiralama BAŞLANGICINDAKİ duruma göre hesaplanır (bugünkü
+        # tarihe göre değil), ileri tarihli bir rezervasyon doğru değerlendirilsin diye.
         vehicle = attrs["vehicle"]
         rental_start = start.date()
 
@@ -150,6 +174,13 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
                     f"{min_experience} yıl — sürücünün kiralama başlangıcındaki deneyimi {experience_years} yıl."
                 )
 
+        min_findeks = MIN_FINDEKS_SCORE_BY_SEGMENT.get(vehicle.segment)
+        if min_findeks and customer.findeks_score is not None and customer.findeks_score < min_findeks:
+            raise serializers.ValidationError(
+                f"{vehicle.get_segment_display()} segmenti için minimum Findeks skoru {min_findeks} "
+                f"— sürücünün kayıtlı skoru {customer.findeks_score}."
+            )
+
         # Müsaitlik kontrolü: aynı araç için, tarihleri çakışan ve hâlâ
         # geçerli (iptal/tamamlanmamış) başka bir rezervasyon var mı?
         # Çakışma formülü: mevcut.start < yeni.end VE mevcut.end > yeni.start
@@ -162,6 +193,21 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
         if conflicting.exists():
             raise serializers.ValidationError(
                 "Bu araç, seçilen tarih aralığında müsait değil."
+            )
+
+        # Aynı müşteri, çakışan tarih aralığında BAŞKA bir araç için de
+        # rezervasyon açamaz — bir kişi aynı anda iki aracı birden
+        # kullanamaz. Araç müsaitlik kontrolüyle aynı çakışma formülü,
+        # burada müşteri bazında.
+        customer_conflicting = Reservation.objects.filter(
+            customer=customer,
+            start_date__lt=end,
+            end_date__gt=start,
+        ).exclude(status__in=[Status.CANCELLED, Status.COMPLETED])
+
+        if customer_conflicting.exists():
+            raise serializers.ValidationError(
+                "Bu müşterinin seçilen tarih aralığında zaten başka bir rezervasyonu var."
             )
 
         return attrs

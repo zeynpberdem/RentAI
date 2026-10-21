@@ -54,6 +54,7 @@ class DriverSerializer(serializers.ModelSerializer):
             "license_class",
             "license_number",
             "license_issue_date",
+            "findeks_score",
             "is_profile_complete",
             "created_at",
         ]
@@ -90,12 +91,45 @@ class DriverCreateSerializer(DriverSerializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
-    """GET /api/auth/me — Ayarlar > Hesabım: giriş yapmış kullanıcının kendi
-    bilgileri. Salt okunur — şifre değiştirme/isim düzenleme şu an kapsam dışı."""
+    """GET/PATCH /api/auth/me — Ayarlar > Hesabım: giriş yapmış kullanıcının
+    kendi bilgileri. Ad/soyad/telefon düzenlenebilir; email (giriş kimliği)
+    ve role BİLEREK salt okunur — kullanıcı kendi rolünü ya da giriş
+    e-postasını elle değiştiremesin diye (rol değişikliği/email değişikliği
+    ayrı, yetkilendirilmiş bir akış gerektirir, burada yok)."""
 
     class Meta:
         model = User
         fields = ["id", "first_name", "last_name", "email", "phone", "role"]
+        read_only_fields = ["id", "email", "role"]
+
+    def validate_phone(self, value):
+        return validate_turkish_phone(value)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """POST /api/auth/me/change-password — mevcut şifreyi doğrulayıp yenisini
+    set eder. write_only: hiçbir zaman response'a geri yansımaz."""
+
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])
+
+    def validate_current_password(self, value):
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Mevcut şifre yanlış.")
+        return value
+
+    def save(self):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return user
+class UserListSerializer(serializers.ModelSerializer):
+    """Başka model'lerin (örn. Reservation2) içinde customer/kullanıcı
+    bilgisini özet göstermek için — salt okunur."""
+
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "last_name", "email", "phone"]
         read_only_fields = fields
 
 

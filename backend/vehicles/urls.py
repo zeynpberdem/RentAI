@@ -7,13 +7,14 @@ kendi 'locations'/'vehicles' onekini burada tasiyor).
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import LocationListView, VehicleViewSet
+from .views import LocationListView, SippRateViewSet, VehicleViewSet
 
 # trailing_slash=False: projedeki hicbir uc noktada sonda '/' yok
 # (ornegin 'api/vehicles', 'api/vehicles/' degil) — router'in urettigi
 # adreslerin de bu yerlesik kurala uymasi icin.
 router = DefaultRouter(trailing_slash=False)
 router.register('vehicles', VehicleViewSet, basename='vehicle')
+router.register('sipp-rates', SippRateViewSet, basename='sipp-rate')
 
 urlpatterns = [
     # --- Locations (arama ekranındaki şube seçimi için) ---

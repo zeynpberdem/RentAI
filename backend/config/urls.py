@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/auth/', include('users.urls')),
     path('api/', include('vehicles.urls')),
     path('api/reservations', include('reservations.urls')),
+    path('api/reservations2/',include('reservations2.urls')),
     path('api/handovers', include('handovers.urls')),
     path('api/service-requests', include('service_requests.urls')),
 

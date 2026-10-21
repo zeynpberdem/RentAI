@@ -19,6 +19,11 @@ class Handover(BaseModel):
     fuel_level = models.PositiveSmallIntegerField()  # yüzde, 0-100
     damage_notes = models.TextField(blank=True)
 
+    # Sadece iade (return) kaydında anlamlı — araç kirli geldiyse otomatik
+    # bir Yıkama talebi açılır (bkz. HandoverSerializer.create). Hasar/yakıt
+    # gibi bir "tahmin" formülü yok, kirli/temiz ikili bir işaret yeterli.
+    is_dirty = models.BooleanField(default=False)
+
     # Sadece iade (return) kaydında doldurulur; teslimde her zaman 0.
     extra_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 

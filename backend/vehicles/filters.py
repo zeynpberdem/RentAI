@@ -44,7 +44,9 @@ class VehicleFilter(django_filters.FilterSet):
         # sadece segment'i tam "suv" olan araçlar döner. has_ac/is_4wd
         # BooleanField olduğu için django-filter otomatik olarak
         # ?has_ac=true / ?is_4wd=true şeklinde çalışan bir filtre üretiyor.
-        fields = ["segment", "status", "location", "has_ac", "is_4wd"]
+        # sipp_code: Araçlar tablosundaki filtrelenebilir sütun artık
+        # Segment değil SIPP Kodu (fiyat artık SIPP koduna göre belirleniyor).
+        fields = ["segment", "sipp_code", "status", "location", "has_ac", "is_4wd"]
 
     def filter_availability(self, queryset, name, value):
         # start_date VE end_date'in İKİSİ birden gelmeden bir "aralık"tan

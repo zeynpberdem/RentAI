@@ -23,6 +23,25 @@ class ServiceRequest(BaseModel):
     # (assigned_to atandıkça, iş yapıldıkça) elle güncellenir.
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
+    # status DONE'a geçtiğinde set edilir (bkz. ServiceRequestUpdateSerializer.update) —
+    # updated_at kullanılamaz çünkü o priority/assigned_to gibi başka bir alan
+    # değiştiğinde de güncellenir, sadece gerçek "bakımdan çıkış" tarihini istiyoruz.
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    # Bu talebi otomatik açan iade kaydı (bkz. handovers/serializers.py
+    # HandoverSerializer.create) — null olabilir çünkü "Talep Aç" ile elle
+    # açılan talepler bir iadeye bağlı değil. Bakım Merkezi'nde "Son
+    # Kiralayan/Hasar" bilgisini ARACIN en son iadesine değil, doğrudan BU
+    # talebi açan iadeye bakarak doğru göstermek için (araç bu talep
+    # kapandıktan sonra başka bir kiralama+iade döngüsünden geçmiş olabilir).
+    handover = models.ForeignKey(
+        "handovers.Handover",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="service_requests",
+    )
+
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

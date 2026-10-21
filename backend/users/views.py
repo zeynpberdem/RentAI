@@ -1,8 +1,10 @@
 """Views for auth/login and driver management — see PDF endpoint POST /api/auth/login."""
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, mixins, permissions, viewsets
+from rest_framework import generics, mixins, permissions, status, viewsets
 from rest_framework.filters import OrderingFilter
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .filters import DriverFilter
@@ -10,6 +12,7 @@ from .helpers import Role
 from .models import User
 from .permissions import IsOperator
 from .serializers import (
+    ChangePasswordSerializer,
     DriverCreateSerializer,
     DriverSerializer,
     MeSerializer,
@@ -25,14 +28,28 @@ class RoleTokenObtainPairView(TokenObtainPairView):
     serializer_class = RoleTokenObtainPairSerializer
 
 
-class MeView(generics.RetrieveAPIView):
-    """GET /api/auth/me — Ayarlar > Hesabım."""
+class MeView(generics.RetrieveUpdateAPIView):
+    """GET/PATCH /api/auth/me — Ayarlar > Hesabım: kendi bilgilerini görme
+    ve düzenleme (ad/soyad/telefon — bkz. MeSerializer)."""
 
     serializer_class = MeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+
+class ChangePasswordView(APIView):
+    """POST /api/auth/me/change-password — Ayarlar > Hesabım: kendi şifresini
+    değiştirme, mevcut şifre doğrulaması ile (bkz. ChangePasswordSerializer)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class StaffViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):

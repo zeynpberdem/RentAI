@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "users",
     "vehicles",
     "reservations",
+    "reservations2",
     "handovers",
     "service_requests",
 ]
@@ -157,7 +158,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Istanbul"
 
 USE_I18N = True
 
@@ -182,7 +183,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Django'ya "varsayılan User modelini kullanma, benim yazdığım
-# users.User'ı kullan" diyoruz. Bu satır, ilk migration'dan ÖNCE burada
+# users.User'ı kullan" diyoruz.
+#  Bu satır, ilk migration'dan ÖNCE burada
 # olmak ZORUNDA — sonradan değiştirmek yeni bir proje açmak kadar zahmetli.
 AUTH_USER_MODEL = "users.User"
 

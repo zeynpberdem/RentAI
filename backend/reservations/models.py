@@ -35,6 +35,21 @@ class Reservation(BaseModel):
     # Süre Uzat işlemi yapıldıysa doldurulur — Rezervasyon Listesi'nde
     # tutarın yanına "+" göstermek için (bkz. ReservationViewSet.extend).
     extended_at = models.DateTimeField(null=True, blank=True)
+    # Uzatma(lar) sonucu eklenen TOPLAM tutar (orijinal fiyata göre) — Rezervasyon
+    # Listesi'nde "+" işaretinin yanında TAM tutar yerine sadece bu farkı
+    # göstermek için (bkz. ReservationViewSet.extend). Birden fazla uzatma
+    # yapılırsa üst üste birikir.
+    extension_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # İade (Handover type=return) planlanan end_date'ten SONRA yapıldıysa
+    # doldurulur — her başlayan geç gün için 1 tam günlük daily_price
+    # (bkz. HandoverSerializer.create). Rezervasyon Listesi'nde "+" ile
+    # gösterilir, extension_amount'tan ayrı çünkü kaynağı farklı (uzatma
+    # değil, geç iade).
+    late_fee_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # İade planlanan end_date'ten ÖNCE yapıldıysa doldurulur — her erken
+    # kalan gün için 1 tam günlük daily_price, gerçek bir indirim olarak
+    # total_price'tan düşülür (bkz. HandoverSerializer.create).
+    early_return_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     # İptal edildiyse NE ZAMAN edildiği — "Rezervasyon Geçmişi" (yaşam
     # döngüsü) görünümünde göstermek için (bkz. ReservationViewSet.cancel).
     cancelled_at = models.DateTimeField(null=True, blank=True)

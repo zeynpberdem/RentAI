@@ -17,6 +17,7 @@ customer / operator / admin.
 
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from core.models import BaseModel
@@ -61,6 +62,14 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     license_class = models.CharField(max_length=2, choices=LicenseClass.choices, blank=True)
     license_issue_date = models.DateField(null=True, blank=True)
     license_number = models.CharField(max_length=30, blank=True)  # Ehliyet üzerindeki seri/numara
+
+    # Findeks kredi notu (0-1900) — gerçek Findeks API'sine entegre değiliz
+    # (bankalarla ücretli/kurumsal anlaşma gerektiriyor, staj kapsamı dışı).
+    # Operatör, başka bir yerden sorguladığı notu buraya elle giriyor —
+    # sadece kayıt/görüntüleme amaçlı.
+    findeks_score = models.PositiveSmallIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1900)]
+    )
 
     objects = UserManager()
 

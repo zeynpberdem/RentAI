@@ -1,8 +1,11 @@
 """Views for reservations — see PDF RES-1/2/3."""
 
+from datetime import timedelta
+
+from django.db.models import Case, DateTimeField, F, IntegerField, Value, When
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
@@ -18,6 +21,25 @@ from .serializers import (
     ReservationSerializer,
     ReservationStaffCreateSerializer,
 )
+
+# Hacer Hanım'ın kuralı: planlanan teslim saatinden (start_date) bu kadar
+# saat geçtiği hâlde araç hâlâ Teslim Bekliyor'da kalmışsa, müşteri
+# gelmemiş (no-show) sayılır ve rezervasyon otomatik iptal edilir — aksi
+# halde araç, gelmeyecek bir müşteri için süresiz bloke kalırdı.
+NO_SHOW_GRACE_HOURS = 6
+
+
+def cancel_noshow_reservations():
+    # Projede Celery/cron kurulu değil (bkz. PDF: "opsiyonel, zaman
+    # kalırsa") — bu yüzden zamanlanmış bir görev yerine, liste her
+    # çekildiğinde (get_queryset) tembel (lazy) olarak çalıştırılıyor.
+    # .update(): tek sorguda toplu güncelleme, save()/sinyal tetiklemiyor
+    # — bu durumda ihtiyaç da yok, Vehicle.status zaten sadece teslim
+    # (delivery) anında değişiyor, Teslim Bekliyor aşamasında hiç dokunulmamıştı.
+    cutoff = timezone.now() - timedelta(hours=NO_SHOW_GRACE_HOURS)
+    Reservation.active_objects.filter(status=Status.CONFIRMED, start_date__lt=cutoff).update(
+        status=Status.CANCELLED, cancelled_at=timezone.now()
+    )
 
 
 class ReservationViewSet(viewsets.ModelViewSet):
@@ -62,12 +84,42 @@ class ReservationViewSet(viewsets.ModelViewSet):
         return ReservationSerializer
 
     def get_queryset(self):
+        cancel_noshow_reservations()
+
         # prefetch_related("handovers"): ReservationSerializer.get_is_early_return
         # her rezervasyon için handover kayıtlarına bakıyor — prefetch olmadan
         # bu N+1 sorguya (liste başına bir sorgu daha) yol açardı.
-        queryset = Reservation.active_objects.select_related(
-            "vehicle", "vehicle__location", "customer", "pickup_location", "return_location"
-        ).prefetch_related("handovers")
+        #
+        # Varsayılan sıralama üç öncelik katmanına ayrılıyor (Hacer Hanım'ın
+        # isteği): 1) Kirada olanlar en üstte, iadesi en yakın olan önce —
+        # operatörün en çok takip etmesi gereken, dışarıda gezen araçlar.
+        # 2) 2 gün içinde teslim alınacak (Teslim Bekliyor) rezervasyonlar,
+        # teslimi en yakın olan önce — operatör hazırlık yapabilsin.
+        # 3) Geri kalan her şey, SIPP koduna göre (az önceki mantık).
+        soon_cutoff = timezone.now() + timedelta(days=2)
+        priority = Case(
+            When(status=Status.ACTIVE, then=Value(0)),
+            When(status=Status.CONFIRMED, start_date__lte=soon_cutoff, then=Value(1)),
+            default=Value(2),
+            output_field=IntegerField(),
+        )
+        # Katman 0 iadeye, katman 1 teslime göre sıralanıyor; katman 2'de
+        # bu alan hep NULL kalıp SIPP koduna devrediyor.
+        sort_date = Case(
+            When(status=Status.ACTIVE, then=F("end_date")),
+            When(status=Status.CONFIRMED, start_date__lte=soon_cutoff, then=F("start_date")),
+            default=Value(None),
+            output_field=DateTimeField(null=True),
+        )
+
+        queryset = (
+            Reservation.active_objects.select_related(
+                "vehicle", "vehicle__location", "customer", "pickup_location", "return_location"
+            )
+            .prefetch_related("handovers")
+            .annotate(priority=priority, sort_date=sort_date)
+            .order_by("priority", "sort_date", "vehicle__sipp_code", "vehicle__plate", "-created_at")
+        )
         if self.request.user.role == "operator":
             return queryset
         return queryset.filter(customer=self.request.user)
@@ -148,8 +200,22 @@ class ReservationViewSet(viewsets.ModelViewSet):
             )
 
         # create()'teki aynı max(...,1) kuralı — bkz. ReservationCreateSerializer.create.
-        days = max((new_end_date.date() - reservation.start_date.date()).days, 1)
+        # timezone.localtime(...): reservation.start_date DB'den UTC olarak
+        # geliyor, new_end_date ise istekten yeni ayrıştırıldığı için zaten
+        # yerel (Europe/Istanbul) — ikisini aynı takvim gününe göre
+        # kıyaslamak için ikisini de yerel saate çeviriyoruz (bkz.
+        # handovers/serializers.py'deki aynı desen).
+        days = max(
+            (timezone.localtime(new_end_date).date() - timezone.localtime(reservation.start_date).date()).days,
+            1,
+        )
         total_price = reservation.vehicle.daily_price * days
+
+        # extension_amount: bu uzatmayla eklenen fark — Rezervasyon
+        # Listesi'nde "+" işaretinin yanında TAM tutar yerine sadece bu
+        # farkın gösterilmesi için (bkz. ReservationSerializer). Birden
+        # fazla uzatma yapılırsa üst üste birikir.
+        reservation.extension_amount += total_price - reservation.total_price
 
         reservation.end_date = new_end_date
         reservation.total_price = total_price

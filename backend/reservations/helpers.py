@@ -30,6 +30,15 @@ MIN_LICENSE_EXPERIENCE_YEARS_BY_SEGMENT = {
     Segment.LUXURY: 3,
 }
 
+# Segment başına minimum Findeks skoru (0-1900) — sürücünün findeks_score
+# alanı BOŞSA bu kontrol atlanır (henüz not girilmemiş demektir, kiralamayı
+# engellemiyoruz). Economy/Mid'de eşik yok, üst segmentlerde risk arttıkça
+# devreye giriyor (bkz. users.models.User.findeks_score).
+MIN_FINDEKS_SCORE_BY_SEGMENT = {
+    Segment.SUV: 1500,
+    Segment.LUXURY: 1700,
+}
+
 
 class Status(models.IntegerChoices):
     """ bkz. Rezervasyon Geçmişi

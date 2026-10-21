@@ -57,7 +57,7 @@ class TestDriverList:
         response = client.get("/api/auth/drivers")
 
         assert response.status_code == 200
-        emails = [driver["email"] for driver in response.data]
+        emails = [driver["email"] for driver in response.data["results"]]
         assert "driverlist-cust@fleet.com" in emails
 
     def test_driver_list_excludes_staff(self, authenticated_client, make_user):
@@ -67,8 +67,26 @@ class TestDriverList:
 
         response = client.get("/api/auth/drivers")
 
-        emails = [driver["email"] for driver in response.data]
+        emails = [driver["email"] for driver in response.data["results"]]
         assert "driverlist-op3@fleet.com" not in emails
+
+    def test_driver_search_matches_full_name_with_space(self, authenticated_client, make_user):
+        # DriverFilter.filter_search önceden tüm ifadeyi TEK parça olarak
+        # her alanda arıyordu — "mert özel" ne first_name'de ("Mert") ne
+        # last_name'de ("Özel") tek başına geçtiği için hiçbir şey
+        # bulunmuyordu. Artık kelime kelime aranıyor (bkz. filters.py).
+        operator = make_user(email="driversearch-op@fleet.com", role=Role.OPERATOR)
+        driver = make_user(email="mert.ozel@example.com", role=Role.CUSTOMER)
+        driver.first_name = "Mert"
+        driver.last_name = "Özel"
+        driver.save()
+        client = authenticated_client(operator)
+
+        response = client.get("/api/auth/drivers", {"search": "mert özel"})
+
+        assert response.status_code == 200
+        emails = [driver["email"] for driver in response.data["results"]]
+        assert "mert.ozel@example.com" in emails
 
     def test_customer_cannot_list_drivers(self, authenticated_client, make_user):
         client = authenticated_client(make_user(email="driverlist-cust2@fleet.com"))

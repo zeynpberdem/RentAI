@@ -4,7 +4,7 @@ import pytest
 
 from users.helpers import Role
 from vehicles.helpers import Fuel, Segment, Transmission
-from vehicles.models import Vehicle
+from vehicles.models import SippRate, Vehicle
 
 
 @pytest.mark.django_db
@@ -75,6 +75,9 @@ class TestVehicleDetail:
 @pytest.mark.django_db
 class TestVehicleAdminCRUD:
     def _payload(self, location):
+        # sipp_code zorunlu (bkz. VehicleWriteSerializer._resolve_daily_price)
+        # — "ECMR" conftest'teki sipp_rate fixture'ının oluşturduğu kod,
+        # bu yüzden bu payload'ı kullanan testler sipp_rate'i de istemeli.
         return {
             "brand": "Renault",
             "model": "Clio",
@@ -85,9 +88,10 @@ class TestVehicleAdminCRUD:
             "plate": "34NEW01",
             "daily_price": 800,
             "location": str(location.id),
+            "sipp_code": "ECMR",
         }
 
-    def test_admin_can_create_vehicle(self, authenticated_client, make_user, location):
+    def test_admin_can_create_vehicle(self, authenticated_client, make_user, location, sipp_rate):
         admin = make_user(email="admin@fleet.com", role=Role.ADMIN)
         client = authenticated_client(admin)
 
@@ -97,6 +101,7 @@ class TestVehicleAdminCRUD:
         assert Vehicle.objects.filter(plate="34NEW01").exists()
 
     def test_admin_can_set_sipp_code(self, authenticated_client, make_user, location):
+        SippRate.objects.create(sipp_code="CDMR", daily_price=900)
         admin = make_user(email="admin-sipp@fleet.com", role=Role.ADMIN)
         client = authenticated_client(admin)
 
@@ -117,9 +122,18 @@ class TestVehicleAdminCRUD:
         result = next(v for v in response.data["results"] if v["id"] == str(vehicle.id))
         assert result["sipp_code"] == "EDAR"
 
-    def test_non_admin_cannot_create_vehicle(self, authenticated_client, make_user, location):
+    def test_operator_can_create_vehicle(self, authenticated_client, make_user, location, sipp_rate):
         operator = make_user(email="operator@fleet.com", role=Role.OPERATOR)
         client = authenticated_client(operator)
+
+        response = client.post("/api/vehicles", self._payload(location))
+
+        assert response.status_code == 201
+        assert Vehicle.objects.filter(plate="34NEW01").exists()
+
+    def test_customer_cannot_create_vehicle(self, authenticated_client, make_user, location):
+        customer = make_user(email="customer@fleet.com", role=Role.CUSTOMER)
+        client = authenticated_client(customer)
 
         response = client.post("/api/vehicles", self._payload(location))
 
@@ -131,16 +145,55 @@ class TestVehicleAdminCRUD:
         assert response.status_code in (401, 403)
 
     def test_admin_can_update_vehicle(self, authenticated_client, make_user, vehicle):
+        # daily_price artık elle PATCH edilemiyor (bkz. VehicleWriteSerializer
+        # docstring) — SIPP koduna göre otomatik belirleniyor. Admin fiyatı
+        # değiştirmek için sipp_code'u başka bir koda çeker, fiyat o kodun
+        # SippRate'inden gelir.
+        SippRate.objects.create(sipp_code="MDMR", daily_price=1500)
         admin = make_user(email="admin2@fleet.com", role=Role.ADMIN)
         client = authenticated_client(admin)
 
         response = client.patch(
-            f"/api/vehicles/{vehicle.id}", {"daily_price": "1500.00"}, format="json"
+            f"/api/vehicles/{vehicle.id}", {"sipp_code": "MDMR"}, format="json"
         )
 
         assert response.status_code == 200
         vehicle.refresh_from_db()
         assert vehicle.daily_price == 1500
+
+    def test_cannot_manually_set_status_to_rented(self, authenticated_client, make_user, vehicle):
+        admin = make_user(email="admin-status@fleet.com", role=Role.ADMIN)
+        client = authenticated_client(admin)
+
+        response = client.patch(f"/api/vehicles/{vehicle.id}", {"status": "rented"}, format="json")
+
+        assert response.status_code == 400
+        vehicle.refresh_from_db()
+        assert vehicle.status == "available"
+
+    def test_cannot_manually_leave_rented_status(self, authenticated_client, make_user, vehicle):
+        vehicle.status = "rented"
+        vehicle.save()
+        admin = make_user(email="admin-status2@fleet.com", role=Role.ADMIN)
+        client = authenticated_client(admin)
+
+        response = client.patch(f"/api/vehicles/{vehicle.id}", {"status": "available"}, format="json")
+
+        assert response.status_code == 400
+        vehicle.refresh_from_db()
+        assert vehicle.status == "rented"
+
+    def test_operator_can_manually_send_available_vehicle_to_maintenance(
+        self, authenticated_client, make_user, vehicle
+    ):
+        operator = make_user(email="op-status@fleet.com", role=Role.OPERATOR)
+        client = authenticated_client(operator)
+
+        response = client.patch(f"/api/vehicles/{vehicle.id}", {"status": "maintenance"}, format="json")
+
+        assert response.status_code == 200
+        vehicle.refresh_from_db()
+        assert vehicle.status == "maintenance"
 
     def test_admin_delete_soft_deletes(self, authenticated_client, make_user, vehicle):
         admin = make_user(email="admin3@fleet.com", role=Role.ADMIN)

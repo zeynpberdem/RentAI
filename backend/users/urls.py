@@ -7,7 +7,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import DriverViewSet, MeView, RoleTokenObtainPairView, StaffViewSet
+from .views import ChangePasswordView, DriverViewSet, MeView, RoleTokenObtainPairView, StaffViewSet
 
 # trailing_slash=False: projedeki hicbir uc noktada sonda '/' yok.
 router = DefaultRouter(trailing_slash=False)
@@ -19,6 +19,7 @@ urlpatterns = [
     # access token'ın içine ayrıca kullanıcının rolü gömülür.
     path('login', RoleTokenObtainPairView.as_view(), name='auth-login'),
     path('refresh', TokenRefreshView.as_view(), name='auth-refresh'),
-    # GET: kendi hesap bilgilerini gör (Ayarlar > Hesabım).
+    # GET/PATCH: kendi hesap bilgilerini gör/düzenle (Ayarlar > Hesabım).
     path('me', MeView.as_view(), name='auth-me'),
+    path('me/change-password', ChangePasswordView.as_view(), name='auth-change-password'),
 ] + router.urls

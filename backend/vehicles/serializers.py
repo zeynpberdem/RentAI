@@ -7,14 +7,22 @@ from rest_framework import serializers
 # reservations.models) için döngüsel import riski yok.
 from reservations.models import Reservation
 
-from .helpers import Fuel, Transmission
-from .models import Location, Vehicle
+from .helpers import Fuel, Status, Transmission
+from .models import Location, SippRate, Vehicle
 
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = ["id", "name", "city", "latitude", "longitude"]
+
+
+class SippRateSerializer(serializers.ModelSerializer):
+    """SIPP Fiyat Tablosu ekranı — SIPP kodu bazında sabit günlük fiyat."""
+
+    class Meta:
+        model = SippRate
+        fields = ["id", "sipp_code", "daily_price"]
 
 
 class VehicleSerializer(serializers.ModelSerializer):
@@ -41,6 +49,9 @@ class VehicleSerializer(serializers.ModelSerializer):
             "image",
             "has_ac",
             "is_4wd",
+            "model_year",
+            "current_km",
+            "inspection_due_date",
         ]
 
 
@@ -83,13 +94,19 @@ class VehicleCalendarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vehicle
-        fields = ["id", "plate", "brand", "model", "reservations"]
+        fields = ["id", "plate", "brand", "model", "sipp_code", "status", "reservations"]
 
 
 class VehicleWriteSerializer(serializers.ModelSerializer):
     """Admin araç ekleme/düzenleme (VEH-1) — plaka ve şube burada YAZILABİLİR
     (public VehicleSerializer'da plate bilerek yoktu, ama admin bunu görüp
-    girebilmeli)."""
+    girebilmeli).
+
+    daily_price artık elle girilmiyor (Hacer Hanım'ın isteği — SIPP koduna
+    göre fiyatlandırma): required=False, client göndermese de olur, gönderse
+    bile create()/update()'te SippRate'ten gelen değerle EZİLİR. Aynı SIPP
+    kodundaki araçların farklı fiyatlanması artık mümkün değil.
+    """
 
     class Meta:
         model = Vehicle
@@ -109,7 +126,30 @@ class VehicleWriteSerializer(serializers.ModelSerializer):
             "image",
             "has_ac",
             "is_4wd",
+            "model_year",
+            "current_km",
+            "inspection_due_date",
         ]
+        extra_kwargs = {"daily_price": {"required": False}}
+
+    def _resolve_daily_price(self, sipp_code):
+        if not sipp_code:
+            raise serializers.ValidationError({"sipp_code": "Fiyatlandırma için SIPP kodu seçilmeli."})
+        rate = SippRate.objects.filter(sipp_code=sipp_code).first()
+        if not rate:
+            raise serializers.ValidationError(
+                {"sipp_code": f"'{sipp_code}' için SIPP Fiyat Tablosu'nda tanımlı bir fiyat yok — önce Fiyat Tablosu'na ekleyin."}
+            )
+        return rate.daily_price
+
+    def create(self, validated_data):
+        validated_data["daily_price"] = self._resolve_daily_price(validated_data.get("sipp_code"))
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        sipp_code = validated_data.get("sipp_code", instance.sipp_code)
+        validated_data["daily_price"] = self._resolve_daily_price(sipp_code)
+        return super().update(instance, validated_data)
 
     def validate(self, attrs):
         # PATCH'te (kısmi güncelleme) sadece değişen alan attrs'te olur —
@@ -119,5 +159,25 @@ class VehicleWriteSerializer(serializers.ModelSerializer):
 
         if fuel == Fuel.ELECTRIC and transmission == Transmission.MANUAL:
             raise serializers.ValidationError("Elektrikli araçların manuel vitesi olamaz.")
+
+        # "Kirada" durumu bu formdan elle seçilemez — sadece teslim/iade
+        # akışı (bkz. HandoverSerializer.create) otomatik olarak set eder.
+        # Aksi halde bir rezervasyon açılmadan araç "kirada" gösterilebilir
+        # ya da gerçekten kiradayken elle "müsait"e çevrilebilirdi.
+        new_status = attrs.get("status")
+        current_status = getattr(self.instance, "status", None)
+        if new_status == Status.RENTED and current_status != Status.RENTED:
+            raise serializers.ValidationError(
+                {"status": "Kirada durumu elle ayarlanamaz, sadece teslim işlemiyle otomatik değişir."}
+            )
+
+        # Ters yön de aynı şekilde korunmalı: aktif bir kiralamadaki araç
+        # elle "müsait"/"bakımda" gibi başka bir duruma çevrilip, gerçekte
+        # hâlâ müşteride olan araç ikinci bir müşteriye rezerve edilebilir
+        # duruma düşmemeli — buradan çıkış da sadece iade akışıyla olur.
+        if current_status == Status.RENTED and new_status not in (None, Status.RENTED):
+            raise serializers.ValidationError(
+                {"status": "Aktif bir kiralamadaki araç elle başka duruma alınamaz, önce iade işlemi yapılmalı."}
+            )
 
         return attrs

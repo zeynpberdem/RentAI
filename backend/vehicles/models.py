@@ -89,6 +89,16 @@ class Vehicle(BaseModel):
     has_ac = models.BooleanField(default=False)     # Klima
     is_4wd = models.BooleanField(default=False)     # Dörtçeker
 
+    # Henüz her araca elle girilmiş olmayabilir, bu yüzden null/blank=True —
+    # sipp_code ile aynı mantık (zorunlu değil, sonradan doldurulabilir).
+    model_year = models.PositiveIntegerField(null=True, blank=True)
+    # default=0: mevcut araçlarda henüz bilinmiyor, "Güncel Kilometre"
+    # düzenleme formundan elle girilecek.
+    current_km = models.PositiveIntegerField(default=0)
+    # Muayene/Sigorta Bitiş Tarihi — filo yöneticisinin takip ettiği en
+    # kritik "ne zaman aksiyon almam gerekiyor" alanlarından biri.
+    inspection_due_date = models.DateField(null=True, blank=True)
+
     class Meta:
         db_table = "vehicles"
         ordering = ["-created_at"]
@@ -110,3 +120,24 @@ class Vehicle(BaseModel):
 
     def __str__(self):
         return f"{self.brand} {self.model} ({self.plate})"
+
+
+class SippRate(BaseModel):
+    """SIPP kodu bazında sabit günlük fiyat tablosu (Hacer Hanım'ın isteği).
+
+    Önceden her araca elle, birbirinden bağımsız bir daily_price giriliyordu
+    — aynı SIPP kodundaki araçlar bile çok farklı fiyatlanmış oluyordu
+    (ör. EDMR: 700-950 TL arası). Artık fiyat buradan, SIPP koduna göre
+    TEK bir yerden yönetiliyor; Vehicle.daily_price bu tablodan türeyen,
+    senkronize edilen bir alan (bkz. VehicleWriteSerializer, SippRateViewSet).
+    """
+
+    sipp_code = models.CharField(max_length=4, unique=True)
+    daily_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        db_table = "sipp_rates"
+        ordering = ["sipp_code"]
+
+    def __str__(self):
+        return f"{self.sipp_code} — {self.daily_price} TL/gün"

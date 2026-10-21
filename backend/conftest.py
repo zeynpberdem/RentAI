@@ -11,7 +11,7 @@ from reservations.models import Reservation
 from users.helpers import Role
 from users.models import User
 from vehicles.helpers import Fuel, Segment, Transmission
-from vehicles.models import Location, Vehicle
+from vehicles.models import Location, SippRate, Vehicle
 
 
 @pytest.fixture
@@ -67,7 +67,15 @@ def location(db):
 
 
 @pytest.fixture
-def vehicle(db, location):
+def sipp_rate(db):
+    """SIPP fiyatlandırması zorunlu olduğundan (bkz. VehicleWriteSerializer.
+    _resolve_daily_price) her araç bir SippRate'e karşılık gelmeli — bu
+    olmadan bir aracı PATCH etmek bile "SIPP kodu seçilmeli" hatası verir."""
+    return SippRate.objects.create(sipp_code="ECMR", daily_price=1000)
+
+
+@pytest.fixture
+def vehicle(db, location, sipp_rate):
     return Vehicle.objects.create(
         brand="Toyota",
         model="Corolla",
@@ -78,6 +86,7 @@ def vehicle(db, location):
         plate="34TEST01",
         daily_price=1000,
         location=location,
+        sipp_code=sipp_rate.sipp_code,
     )
 
 

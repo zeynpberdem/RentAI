@@ -16,15 +16,11 @@ class Role(models.TextChoices):
 
 
 class LicenseClass(models.TextChoices):
-    """Türkiye'deki sürücü belgesi sınıfları — bkz. profil tamamlama akışı."""
+    """Sürücü belgesi sınıfları — bkz. profil tamamlama akışı.
 
-    A1 = "A1", "A1"
-    A2 = "A2", "A2"
-    A = "A", "A"
-    B1 = "B1", "B1"
+    Sadece B (binek araç) var: filo economy/mid/suv/luxury segmentlerinden
+    oluşuyor (bkz. vehicles.helpers.Segment), motosiklet/kamyon/otobüs
+    kiralanmıyor — bu yüzden A/A1/A2/BE/C/C1/D/D1 gibi diğer Türkiye
+    sınıfları burada anlamsız, kafa karıştırmasın diye listeye alınmadı."""
+
     B = "B", "B"
-    BE = "BE", "BE"
-    C1 = "C1", "C1"
-    C = "C", "C"
-    D1 = "D1", "D1"
-    D = "D", "D"
